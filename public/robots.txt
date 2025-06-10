@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Allow: /compress
+Allow: /privacy-policy
+Allow: /terms-conditions
+Allow: /contact
+
+Sitemap: /sitemap.xml
