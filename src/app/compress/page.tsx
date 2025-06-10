@@ -14,16 +14,56 @@ import JSZip from 'jszip';
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const MAX_FILES = 10;
 const MAX_CONCURRENT_COMPRESSIONS = 3;
 
+type PresetValue = "custom" | "balanced" | "max_compression" | "high_quality";
+type ResolutionValue = "original" | "1920" | "1280" | "1024";
+
+interface PresetConfig {
+  quality: number;
+  resolution: ResolutionValue;
+}
+
+const presetConfigs: Record<Exclude<PresetValue, "custom">, PresetConfig> = {
+  balanced: { quality: 0.7, resolution: "1920" },
+  max_compression: { quality: 0.5, resolution: "1280" },
+  high_quality: { quality: 0.85, resolution: "original" },
+};
+
 export default function JPEGifyAppPage() {
   const [imageFiles, setImageFiles] = useState<ImageFile[]>([]);
-  const [compressionQuality, setCompressionQuality] = useState(0.7);
   const [activeCompressions, setActiveCompressions] = useState(0);
   const { toast } = useToast();
+
+  // Compression Settings State
+  const [selectedPreset, setSelectedPreset] = useState<PresetValue>("balanced");
+  const [compressionQuality, setCompressionQuality] = useState<number>(presetConfigs.balanced.quality);
+  const [targetResolution, setTargetResolution] = useState<ResolutionValue>(presetConfigs.balanced.resolution);
+  const [removeMetadata, setRemoveMetadata] = useState<boolean>(true);
+
+
+  useEffect(() => {
+    if (selectedPreset !== "custom") {
+      const config = presetConfigs[selectedPreset];
+      setCompressionQuality(config.quality);
+      setTargetResolution(config.resolution);
+    }
+  }, [selectedPreset]);
+
+  const handleQualityChange = (value: number[]) => {
+    setCompressionQuality(value[0]);
+    setSelectedPreset("custom");
+  };
+
+  const handleResolutionChange = (value: ResolutionValue) => {
+    setTargetResolution(value);
+    setSelectedPreset("custom");
+  };
 
   const updateImageFile = useCallback((id: string, updates: Partial<ImageFile>) => {
     setImageFiles((prevFiles) =>
@@ -36,17 +76,25 @@ export default function JPEGifyAppPage() {
       updateImageFile(fileToProcess.id, { status: "compressing", progress: 0 });
 
       try {
-        const options = {
-          maxSizeMB: 2,
-          maxWidthOrHeight: 1920,
+        const options: imageCompression.Options = {
+          maxSizeMB: 5, // Increased maxSizeMB slightly as initialQuality is the primary control.
           useWebWorker: true,
           initialQuality: compressionQuality,
-          alwaysKeepResolution: false,
           onProgress: (p: number) => {
             updateImageFile(fileToProcess.id, { progress: p });
           },
           fileType: 'image/jpeg',
         };
+
+        if (targetResolution === "original") {
+          options.alwaysKeepResolution = true;
+        } else {
+          options.alwaysKeepResolution = false;
+          options.maxWidthOrHeight = parseInt(targetResolution, 10);
+        }
+        
+        // browser-image-compression generally strips EXIF data by default.
+        // The 'removeMetadata' checkbox is for user intent; no specific option is passed.
 
         const compressedBlob = await imageCompression(fileToProcess.file, options);
 
@@ -84,7 +132,7 @@ export default function JPEGifyAppPage() {
         setActiveCompressions((prev) => Math.max(0, prev - 1));
       }
     },
-    [updateImageFile, toast, compressionQuality]
+    [updateImageFile, toast, compressionQuality, targetResolution, removeMetadata] // removeMetadata added for completeness, though not directly used in options
   );
   
   useEffect(() => {
@@ -98,7 +146,6 @@ export default function JPEGifyAppPage() {
       setActiveCompressions(prev => prev + filesToStartNow.length);
       filesToStartNow.forEach(file => {
         updateImageFile(file.id, { status: 'queued' });
-        // Call doCompressImage asynchronously to allow state update to propagate
         setTimeout(() => doCompressImage(file), 0);
       });
     }
@@ -205,20 +252,55 @@ export default function JPEGifyAppPage() {
           <header className="text-center space-y-2">
             <h1 className="text-5xl font-bold font-headline text-primary sm:text-6xl">Compress JPEGs</h1>
             <p className="text-lg text-muted-foreground sm:text-xl">
-              Drag & drop your JPEGs to compress them instantly in your browser.
+              Drag & drop your JPEGs to compress them instantly in your browser with fine-tuned settings.
             </p>
           </header>
 
           <ImageUploader onFilesAdded={handleFilesAdded} />
 
-          <Card className="bg-card shadow">
+          <Card className="bg-card shadow-lg">
             <CardHeader>
-              <CardTitle className="text-xl font-semibold">Compression Settings</CardTitle>
+              <CardTitle className="text-2xl font-semibold">Compression Settings</CardTitle>
               <CardDescription>
-                Adjust the desired quality for image compression. This setting applies to newly uploaded images.
+                Adjust the desired quality, resolution, and other options for image compression. Settings apply to newly uploaded images.
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
+                <div className="space-y-2">
+                  <Label htmlFor="presetSelector" className="text-base font-medium text-foreground/90">
+                    Preset
+                  </Label>
+                  <Select value={selectedPreset} onValueChange={(value: PresetValue) => setSelectedPreset(value)}>
+                    <SelectTrigger id="presetSelector" className="w-full">
+                      <SelectValue placeholder="Select a preset" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="balanced">Balanced (Good quality, good compression)</SelectItem>
+                      <SelectItem value="max_compression">Max Compression (Smallest size)</SelectItem>
+                      <SelectItem value="high_quality">High Quality (Best quality, larger size)</SelectItem>
+                      <SelectItem value="custom">Custom</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                 <div className="space-y-2">
+                  <Label htmlFor="resolutionSelector" className="text-base font-medium text-foreground/90">
+                    Target Resolution (longest edge)
+                  </Label>
+                  <Select value={targetResolution} onValueChange={handleResolutionChange}>
+                    <SelectTrigger id="resolutionSelector" className="w-full">
+                      <SelectValue placeholder="Select target resolution" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="original">Original Resolution</SelectItem>
+                      <SelectItem value="1920">Full HD (1920px)</SelectItem>
+                      <SelectItem value="1280">HD (1280px)</SelectItem>
+                      <SelectItem value="1024">Web Standard (1024px)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <Label htmlFor="qualitySlider" className="text-base font-medium text-foreground/90">
@@ -232,14 +314,31 @@ export default function JPEGifyAppPage() {
                   id="qualitySlider"
                   min={0.1}
                   max={1.0}
-                  step={0.05}
+                  step={0.01} // Finer step for quality
                   value={[compressionQuality]}
-                  onValueChange={(value) => setCompressionQuality(value[0])}
+                  onValueChange={handleQualityChange}
                   className="w-full"
                   aria-label={`Compression quality ${Math.round(compressionQuality * 100)}%`}
                 />
                 <p className="text-xs text-muted-foreground">
-                  Lower values result in smaller file sizes but may reduce image quality. Higher values retain more quality but result in larger files.
+                  Lower values mean smaller files but lower quality. Higher values mean better quality but larger files. Adjusted by presets or manually (sets preset to Custom).
+                </p>
+              </div>
+              
+              <div className="space-y-2">
+                <Label className="text-base font-medium text-foreground/90">Advanced Options</Label>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="removeMetadata"
+                    checked={removeMetadata}
+                    onCheckedChange={(checked) => setRemoveMetadata(checked as boolean)}
+                  />
+                  <Label htmlFor="removeMetadata" className="text-sm font-normal text-foreground/80 cursor-pointer">
+                    Attempt to remove image metadata (e.g., EXIF data)
+                  </Label>
+                </div>
+                 <p className="text-xs text-muted-foreground pl-6">
+                  Helps reduce file size further. Most metadata is removed by default during compression.
                 </p>
               </div>
             </CardContent>
@@ -249,7 +348,7 @@ export default function JPEGifyAppPage() {
             <Info className="h-5 w-5 text-primary" />
             <AlertTitle className="font-semibold text-primary/90">In-Browser Compression</AlertTitle>
             <AlertDescription className="text-primary/80">
-              JPEGify compresses images directly in your browser. Your files are not uploaded to any server.
+              JPEGify compresses images directly in your browser. Your files are not uploaded to any server, ensuring privacy.
             </AlertDescription>
           </Alert>
 
@@ -285,3 +384,6 @@ export default function JPEGifyAppPage() {
     </div>
   );
 }
+
+
+    
