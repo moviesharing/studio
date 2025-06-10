@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import AdSenseAdUnit from "@/components/adsense-ad-unit"; // Import the AdSense component
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const MAX_FILES = 10;
@@ -77,7 +78,7 @@ export default function JPEGifyAppPage() {
 
       try {
         const options: imageCompression.Options = {
-          maxSizeMB: 5, // Increased maxSizeMB slightly as initialQuality is the primary control.
+          maxSizeMB: 5, 
           useWebWorker: true,
           initialQuality: compressionQuality,
           onProgress: (p: number) => {
@@ -93,9 +94,6 @@ export default function JPEGifyAppPage() {
           options.maxWidthOrHeight = parseInt(targetResolution, 10);
         }
         
-        // browser-image-compression generally strips EXIF data by default.
-        // The 'removeMetadata' checkbox is for user intent; no specific option is passed.
-
         const compressedBlob = await imageCompression(fileToProcess.file, options);
 
         const compressedFile = new File([compressedBlob], fileToProcess.file.name, {
@@ -132,7 +130,7 @@ export default function JPEGifyAppPage() {
         setActiveCompressions((prev) => Math.max(0, prev - 1));
       }
     },
-    [updateImageFile, toast, compressionQuality, targetResolution, removeMetadata] // removeMetadata added for completeness, though not directly used in options
+    [updateImageFile, toast, compressionQuality, targetResolution, removeMetadata] 
   );
   
   useEffect(() => {
@@ -257,6 +255,14 @@ export default function JPEGifyAppPage() {
           </header>
 
           <ImageUploader onFilesAdded={handleFilesAdded} />
+          
+          {/* Placeholder for AdSense Ad Unit */}
+          <AdSenseAdUnit
+            adClient="ca-pub-0000000000000000" // IMPORTANT: Replace with your actual AdSense Publisher ID
+            adSlot="0000000000"       // IMPORTANT: Replace with your actual Ad Slot ID
+            adFormat="auto"
+            fullWidthResponsive={true}
+          />
 
           <Card className="bg-card shadow-lg">
             <CardHeader>
@@ -314,7 +320,7 @@ export default function JPEGifyAppPage() {
                   id="qualitySlider"
                   min={0.1}
                   max={1.0}
-                  step={0.01} // Finer step for quality
+                  step={0.01} 
                   value={[compressionQuality]}
                   onValueChange={handleQualityChange}
                   className="w-full"
@@ -384,6 +390,3 @@ export default function JPEGifyAppPage() {
     </div>
   );
 }
-
-
-    

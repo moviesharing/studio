@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { SiteHeader } from "@/components/site-header";
+import Script from 'next/script';
 
 export const metadata: Metadata = {
   title: "JPEGify - Smart Image Compression",
@@ -22,6 +23,12 @@ export default function RootLayout({
         <link
           href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
           rel="stylesheet"
+        />
+        <Script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-0000000000000000" // IMPORTANT: Replace ca-pub-0000000000000000 with your actual AdSense Publisher ID
+          crossOrigin="anonymous"
+          strategy="afterInteractive"
         />
       </head>
       <body className="font-body antialiased">
