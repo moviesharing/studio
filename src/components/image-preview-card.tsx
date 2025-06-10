@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { ImageFile } from "@/types";
@@ -16,14 +17,14 @@ interface ImagePreviewCardProps {
 export function ImagePreviewCard({ imageFile }: ImagePreviewCardProps) {
   
   useEffect(() => {
-    // Clean up object URL when component unmounts or previewUrl changes
+    // Clean up object URL only when component unmounts
     const currentPreviewUrl = imageFile.previewUrl;
     return () => {
       if (currentPreviewUrl) {
         URL.revokeObjectURL(currentPreviewUrl);
       }
     };
-  }, [imageFile.previewUrl]);
+  }, []); // Empty dependency array ensures cleanup only on unmount
 
   const handleDownload = () => {
     const link = document.createElement('a');

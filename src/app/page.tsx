@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useCallback, useEffect } from "react";
@@ -110,12 +111,7 @@ export default function HomePage() {
   
   const allCompressed = imageFiles.length > 0 && imageFiles.every(f => f.status === 'compressed' || f.status === 'error');
 
-  // Cleanup object URLs on unmount
-  useEffect(() => {
-    return () => {
-      imageFiles.forEach(imgFile => URL.revokeObjectURL(imgFile.previewUrl));
-    };
-  }, [imageFiles]);
+  // Removed the useEffect for imageFiles cleanup as ImagePreviewCard now handles its own URL revocation.
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground">
