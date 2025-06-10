@@ -38,22 +38,16 @@ export default function ContactPage() {
                 For general inquiries, support, or feedback, please email us at:
               </p>
               <a
-                href="mailto:contact@example.com" // IMPORTANT: Replace with your actual contact email
+                href="mailto:jphabswebsites@gmail.com"
                 className="text-primary hover:underline font-medium"
               >
-                contact@example.com {/* IMPORTANT: Replace with your actual contact email */}
+                jphabswebsites@gmail.com
               </a>
-              <p className="text-xs text-muted-foreground mt-1">
-                (Please replace this with your actual contact email address.)
-              </p>
             </div>
           </div>
           <div className="text-sm text-muted-foreground">
             <p>
               We typically respond within 1-2 business days.
-            </p>
-            <p className="mt-4 font-bold text-destructive">
-              Note: This is a placeholder contact page. You should update the email address and potentially add a contact form for a better user experience.
             </p>
           </div>
         </CardContent>
