@@ -54,6 +54,7 @@ export function ImagePreviewCard({ imageFile }: ImagePreviewCardProps) {
             layout="fill"
             objectFit="cover"
             className="transition-opacity duration-300"
+            unoptimized={true} 
           />
         ) : (
           <div className="w-full h-full bg-muted flex items-center justify-center">
