@@ -1,288 +1,67 @@
 
 "use client";
 
-import React, { useState, useCallback, useEffect } from "react";
-import type { ImageFile } from "@/types";
-import { ImageUploader } from "@/components/image-uploader";
-import { ImagePreviewCard } from "@/components/image-preview-card";
 import { Button } from "@/components/ui/button";
-import { Archive, Info, Loader2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import imageCompression from 'browser-image-compression';
-import JSZip from 'jszip';
-import { Slider } from "@/components/ui/slider";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useAuth } from "@/contexts/auth-context";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { Loader2, Image as ImageIcon } from "lucide-react";
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-const MAX_FILES = 10;
-const MAX_CONCURRENT_COMPRESSIONS = 3; // Max images to compress at once
-
-export default function HomePage() {
-  const [imageFiles, setImageFiles] = useState<ImageFile[]>([]);
-  const [compressionQuality, setCompressionQuality] = useState(0.7);
-  const [activeCompressions, setActiveCompressions] = useState(0);
-  const { toast } = useToast();
-
-  const updateImageFile = useCallback((id: string, updates: Partial<ImageFile>) => {
-    setImageFiles((prevFiles) =>
-      prevFiles.map((file) => (file.id === id ? { ...file, ...updates } : file))
-    );
-  }, []);
-
-  const doCompressImage = useCallback(
-    async (fileToProcess: ImageFile) => {
-      updateImageFile(fileToProcess.id, { status: "compressing", progress: 0 });
-
-      try {
-        const options = {
-          maxSizeMB: 2,
-          maxWidthOrHeight: 1920,
-          useWebWorker: true,
-          initialQuality: compressionQuality,
-          alwaysKeepResolution: false,
-          onProgress: (p: number) => {
-            updateImageFile(fileToProcess.id, { progress: p });
-          },
-          fileType: 'image/jpeg',
-        };
-
-        const compressedBlob = await imageCompression(fileToProcess.file, options);
-
-        const compressedFile = new File([compressedBlob], fileToProcess.file.name, {
-          type: compressedBlob.type,
-          lastModified: Date.now(),
-        });
-
-        updateImageFile(fileToProcess.id, {
-          status: "compressed",
-          progress: 100,
-          compressedSize: compressedFile.size,
-          compressedFile: compressedFile,
-        });
-
-        toast({
-          title: "Compression Complete",
-          description: `${fileToProcess.file.name} has been compressed.`,
-        });
-
-      } catch (error) {
-        console.error("Compression error:", error);
-        const errorMessage = error instanceof Error ? error.message : "Unknown compression error";
-        updateImageFile(fileToProcess.id, {
-          status: "error",
-          error: errorMessage,
-          progress: 0,
-        });
-        toast({
-          title: "Compression Failed",
-          description: `${fileToProcess.file.name}: ${errorMessage}`,
-          variant: "destructive",
-        });
-      } finally {
-        setActiveCompressions((prev) => prev - 1);
-      }
-    },
-    [updateImageFile, toast, compressionQuality]
-  );
+export default function LandingPage() {
+  const { user, signInWithGoogle, loading } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
-    let slotsToFill = MAX_CONCURRENT_COMPRESSIONS - activeCompressions;
-    if (slotsToFill <= 0) return;
-
-    const pendingFiles = imageFiles.filter(f => f.status === 'pending');
-    const filesToStartNow = pendingFiles.slice(0, slotsToFill);
-
-    if (filesToStartNow.length > 0) {
-      setActiveCompressions(prev => prev + filesToStartNow.length);
-      filesToStartNow.forEach(file => {
-        updateImageFile(file.id, { status: 'queued' });
-        // Ensure doCompressImage is called after state update
-        // This might need a slight refactor if React batches state updates too aggressively
-        // For now, direct call should mostly work given the flow.
-        doCompressImage(file); 
-      });
+    if (!loading && user) {
+      router.push("/compress");
     }
-  }, [imageFiles, activeCompressions, doCompressImage, updateImageFile]);
+  }, [user, loading, router]);
 
-  const handleFilesAdded = useCallback(
-    (files: File[]) => {
-      const newImageFiles: ImageFile[] = files
-        .filter(file => {
-          if (file.size > MAX_FILE_SIZE) {
-            toast({
-              title: "File too large",
-              description: `${file.name} is larger than ${MAX_FILE_SIZE / (1024*1024)}MB and will not be processed.`,
-              variant: "destructive",
-            });
-            return false;
-          }
-          return true;
-        })
-        .map((file) => ({
-          id: `${file.name}-${Date.now()}-${Math.random()}`,
-          file,
-          status: "pending",
-          progress: 0,
-          originalSize: file.size,
-        }));
-
-      if (imageFiles.length + newImageFiles.length > MAX_FILES) {
-        toast({
-          title: "Too many files",
-          description: `You can upload a maximum of ${MAX_FILES} files at a time. Only the first ${MAX_FILES - imageFiles.length} files will be added.`,
-          variant: "destructive",
-        });
-        const filesToActuallyAdd = newImageFiles.slice(0, MAX_FILES - imageFiles.length);
-        setImageFiles((prev) => [...prev, ...filesToActuallyAdd]);
-        return;
-      }
-
-      setImageFiles((prev) => [...prev, ...newImageFiles]);
-    },
-    [toast, imageFiles.length]
-  );
-
-  const handleBatchDownload = async () => {
-    const compressedFilesToDownload = imageFiles.filter(
-      (f) => f.status === "compressed" && f.compressedFile
+  if (loading || (!loading && user)) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <Loader2 className="h-16 w-16 animate-spin text-primary" />
+      </div>
     );
-
-    if (compressedFilesToDownload.length === 0) {
-      toast({
-        title: "No Compressed Images",
-        description: "There are no successfully compressed images to download.",
-        variant: "default",
-      });
-      return;
-    }
-
-    toast({
-      title: "Preparing ZIP...",
-      description: `Zipping ${compressedFilesToDownload.length} compressed images.`,
-    });
-
-    const zip = new JSZip();
-    compressedFilesToDownload.forEach((imageFile) => {
-      if (imageFile.compressedFile) {
-        zip.file(imageFile.compressedFile.name, imageFile.compressedFile);
-      }
-    });
-
-    try {
-      const zipBlob = await zip.generateAsync({ type: "blob" });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(zipBlob);
-      link.download = 'jpegify_compressed_images.zip';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(link.href);
-
-      toast({
-        title: "Download Started",
-        description: "Your ZIP file should begin downloading shortly.",
-      });
-    } catch (error) {
-      console.error("Error creating ZIP file:", error);
-      const errorMessage = error instanceof Error ? error.message : "Unknown error";
-      toast({
-        title: "ZIP Creation Failed",
-        description: `Could not create ZIP file: ${errorMessage}`,
-        variant: "destructive",
-      });
-    }
-  };
-
-  const allProcessedOrErrored = imageFiles.length > 0 && imageFiles.every(f => f.status === 'compressed' || f.status === 'error');
-  const anyCompressedSuccessfully = imageFiles.some(f => f.status === 'compressed');
-  const processingInProgress = activeCompressions > 0 || imageFiles.some(f => f.status === 'pending' || f.status === 'queued' || f.status === 'compressing');
-
+  }
 
   return (
-    <div className="flex flex-col min-h-screen bg-background text-foreground">
-      <main className="flex-grow container mx-auto px-4 py-8 sm:px-6 lg:px-8">
-        <div className="w-full max-w-5xl mx-auto space-y-10">
-          <header className="text-center space-y-2">
-            <h1 className="text-5xl font-bold font-headline text-primary sm:text-6xl">JPEGify</h1>
-            <p className="text-lg text-muted-foreground sm:text-xl">
-              Drag & drop your JPEGs to compress them instantly in your browser.
-            </p>
-          </header>
-
-          <ImageUploader onFilesAdded={handleFilesAdded} />
-
-          <Card className="bg-card shadow">
-            <CardHeader>
-              <CardTitle className="text-xl font-semibold">Compression Settings</CardTitle>
-              <CardDescription>
-                Adjust the desired quality for image compression. This setting applies to newly uploaded images.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <Label htmlFor="qualitySlider" className="text-base font-medium text-foreground/90">
-                    JPEG Quality
-                  </Label>
-                  <span className="text-sm font-semibold text-primary tabular-nums">
-                    {Math.round(compressionQuality * 100)}%
-                  </span>
-                </div>
-                <Slider
-                  id="qualitySlider"
-                  min={0.1}
-                  max={1.0}
-                  step={0.05}
-                  value={[compressionQuality]}
-                  onValueChange={(value) => setCompressionQuality(value[0])}
-                  className="w-full"
-                  aria-label={`Compression quality ${Math.round(compressionQuality * 100)}%`}
-                />
-                <p className="text-xs text-muted-foreground">
-                  Lower values result in smaller file sizes but may reduce image quality. Higher values retain more quality but result in larger files.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Alert variant="default" className="bg-accent/50 border-primary/30">
-            <Info className="h-5 w-5 text-primary" />
-            <AlertTitle className="font-semibold text-primary/90">In-Browser Compression</AlertTitle>
-            <AlertDescription className="text-primary/80">
-              JPEGify compresses images directly in your browser. Your files are not uploaded to any server.
-            </AlertDescription>
-          </Alert>
-
-          {imageFiles.length > 0 && (
-            <section className="space-y-6">
-              <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-                <h2 className="text-3xl font-semibold font-headline">Your Images</h2>
-                <Button
-                  onClick={handleBatchDownload}
-                  disabled={!allProcessedOrErrored || !anyCompressedSuccessfully || processingInProgress}
-                  size="lg"
-                >
-                  {processingInProgress ? (
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  ) : (
-                    <Archive className="mr-2 h-5 w-5" />
-                  )}
-                  {processingInProgress ? 'Processing...' : 'Download All Compressed'}
-                </Button>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {imageFiles.map((file) => (
-                  <ImagePreviewCard key={file.id} imageFile={file} />
-                ))}
-              </div>
-            </section>
-          )}
+    <div className="flex min-h-screen flex-col">
+      <header className="container mx-auto flex h-20 items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+        <div className="flex items-center gap-2">
+            <ImageIcon className="h-8 w-8 text-primary" />
+            <h1 className="text-2xl font-bold text-primary">JPEGify</h1>
+        </div>
+      </header>
+      <main className="flex flex-grow flex-col items-center justify-center text-center container mx-auto px-4 py-16 sm:px-6 lg:px-8">
+        <div className="bg-card p-8 sm:p-12 rounded-xl shadow-2xl max-w-2xl w-full">
+          <h2 className="text-4xl font-extrabold tracking-tight text-primary sm:text-5xl md:text-6xl">
+            Effortless Image Compression
+          </h2>
+          <p className="mt-6 max-w-md mx-auto text-lg text-muted-foreground sm:text-xl md:mt-8 md:max-w-xl">
+            Securely compress your JPEG images directly in your browser. Fast, private, and easy to use.
+          </p>
+          <div className="mt-8 sm:mt-10">
+            <Button
+              size="lg"
+              onClick={signInWithGoogle}
+              className="w-full max-w-xs mx-auto text-lg"
+              disabled={loading}
+            >
+              {loading ? (
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+              ) : (
+                "Sign In with Google to Get Started"
+              )}
+            </Button>
+          </div>
+          <p className="mt-6 text-xs text-muted-foreground">
+            Your images are processed locally and never leave your device.
+          </p>
         </div>
       </main>
-      <footer className="py-6 text-center text-sm text-muted-foreground border-t">
-        JPEGify &copy; {new Date().getFullYear()}. Built with Next.js, ShadCN UI & Browser Image Compression.
+      <footer className="py-8 text-center text-sm text-muted-foreground border-t">
+        JPEGify &copy; {new Date().getFullYear()}. All rights reserved.
       </footer>
     </div>
   );
