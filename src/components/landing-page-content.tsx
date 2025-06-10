@@ -4,6 +4,7 @@
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { Image as ImageIcon, ArrowRight, CheckCircle } from "lucide-react";
+import AAdsUnit from "@/components/a-ads-unit";
 
 export function LandingPageContent() {
   const router = useRouter();
@@ -24,7 +25,7 @@ export function LandingPageContent() {
         <p className="mt-4 max-w-xl mx-auto text-lg text-muted-foreground sm:text-xl md:mt-6 md:max-w-2xl">
           Instantly compress your JPEG images with lightning speed, right in your browser. Secure, private, and incredibly easy to use.
         </p>
-        <div className="mt-10 mb-12">
+        <div className="mt-10">
           <Button
             size="lg"
             onClick={handleGetStarted}
@@ -32,6 +33,10 @@ export function LandingPageContent() {
           >
             Start Compressing <ArrowRight className="ml-2 h-6 w-6" />
           </Button>
+        </div>
+
+        <div className="my-8 w-full max-w-2xl">
+          <AAdsUnit adUnitId="2398113" />
         </div>
 
         <section className="max-w-2xl w-full space-y-8 text-left bg-card p-6 sm:p-8 rounded-xl shadow-lg">
@@ -68,6 +73,11 @@ export function LandingPageContent() {
             </li>
           </ul>
         </section>
+
+        <div className="mt-8 w-full max-w-2xl">
+          <AAdsUnit adUnitId="2398113" />
+        </div>
+
       </main>
     </div>
   );
