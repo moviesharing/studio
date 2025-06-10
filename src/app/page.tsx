@@ -30,15 +30,15 @@ export default function HomePage() {
 
       try {
         const options = {
-          maxSizeMB: 2, // Aim for files under 2MB
-          maxWidthOrHeight: 1920, // Resize if larger than 1920px on either dimension
+          maxSizeMB: 2, 
+          maxWidthOrHeight: 1920, 
           useWebWorker: true,
-          initialQuality: 0.7, // JPEG quality (0 to 1)
-          alwaysKeepResolution: false, // Allow resolution change if needed
+          initialQuality: 0.7, 
+          alwaysKeepResolution: false, 
           onProgress: (p: number) => {
             updateImageFile(fileToProcess.id, { progress: p });
           },
-          fileType: 'image/jpeg', // Ensure output is JPEG
+          fileType: 'image/jpeg', 
         };
 
         const compressedBlob = await imageCompression(fileToProcess.file, options);
@@ -95,7 +95,6 @@ export default function HomePage() {
         .map((file) => ({
           id: `${file.name}-${Date.now()}-${Math.random()}`,
           file,
-          previewUrl: URL.createObjectURL(file),
           status: "pending",
           progress: 0,
           originalSize: file.size,
@@ -124,7 +123,6 @@ export default function HomePage() {
       title: "Batch Download (Demo)",
       description: "Simulating ZIP download of all compressed images. This feature is for demonstration purposes.",
     });
-    // Actual ZIP creation would require a library like JSZip and more complex logic
   };
   
   const allProcessed = imageFiles.length > 0 && imageFiles.every(f => f.status === 'compressed' || f.status === 'error');

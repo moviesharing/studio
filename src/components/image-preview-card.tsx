@@ -2,8 +2,7 @@
 "use client";
 
 import type { ImageFile } from "@/types";
-import React, { useEffect } from "react";
-// import Image from "next/image"; // No longer needed
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -15,16 +14,19 @@ interface ImagePreviewCardProps {
 }
 
 function ImagePreviewCardComponent({ imageFile }: ImagePreviewCardProps) {
-  
+  const [internalPreviewUrl, setInternalPreviewUrl] = useState<string | null>(null);
+
   useEffect(() => {
-    const currentPreviewUrl = imageFile.previewUrl;
-    // Ensure the URL is only revoked when the component unmounts
-    return () => {
-      if (currentPreviewUrl) {
-         URL.revokeObjectURL(currentPreviewUrl);
-      }
-    };
-  }, []); 
+    if (imageFile && imageFile.file) {
+      const url = URL.createObjectURL(imageFile.file);
+      setInternalPreviewUrl(url);
+
+      return () => {
+        URL.revokeObjectURL(url);
+      };
+    }
+  }, [imageFile?.file]);
+
 
   const handleDownload = () => {
     if (imageFile.status === 'compressed' && imageFile.compressedFile) {
@@ -61,9 +63,9 @@ function ImagePreviewCardComponent({ imageFile }: ImagePreviewCardProps) {
   return (
     <Card className="overflow-hidden shadow-lg flex flex-col bg-card">
       <CardHeader className="p-0 relative aspect-video">
-        {imageFile.previewUrl ? (
+        {internalPreviewUrl ? (
           <img
-            src={imageFile.previewUrl}
+            src={internalPreviewUrl}
             alt={`Preview of ${imageFile.file.name}`}
             className="absolute top-0 left-0 w-full h-full object-cover transition-opacity duration-300"
           />
