@@ -3,7 +3,7 @@
 
 import type { ImageFile } from "@/types";
 import React, { useEffect } from "react";
-import Image from "next/image";
+// import Image from "next/image"; // No longer needed
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -18,12 +18,13 @@ function ImagePreviewCardComponent({ imageFile }: ImagePreviewCardProps) {
   
   useEffect(() => {
     const currentPreviewUrl = imageFile.previewUrl;
+    // Ensure the URL is only revoked when the component unmounts
     return () => {
       if (currentPreviewUrl) {
          URL.revokeObjectURL(currentPreviewUrl);
       }
     };
-  }, [imageFile.previewUrl]); // Depend on previewUrl to ensure it's cleaned up if it changes, though it shouldn't for a given card.
+  }, []); 
 
   const handleDownload = () => {
     if (imageFile.status === 'compressed' && imageFile.compressedFile) {
@@ -34,9 +35,8 @@ function ImagePreviewCardComponent({ imageFile }: ImagePreviewCardProps) {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      URL.revokeObjectURL(url); // Clean up the object URL after download starts
+      URL.revokeObjectURL(url); 
     } else {
-      // This case should ideally not be reached if button is properly disabled
       console.warn("Download attempted on a non-compressed or missing file.");
     }
   };
@@ -62,13 +62,10 @@ function ImagePreviewCardComponent({ imageFile }: ImagePreviewCardProps) {
     <Card className="overflow-hidden shadow-lg flex flex-col bg-card">
       <CardHeader className="p-0 relative aspect-video">
         {imageFile.previewUrl ? (
-          <Image
+          <img
             src={imageFile.previewUrl}
             alt={`Preview of ${imageFile.file.name}`}
-            layout="fill"
-            objectFit="cover"
-            className="transition-opacity duration-300"
-            unoptimized={true} 
+            className="absolute top-0 left-0 w-full h-full object-cover transition-opacity duration-300"
           />
         ) : (
           <div className="w-full h-full bg-muted flex items-center justify-center">
@@ -96,7 +93,7 @@ function ImagePreviewCardComponent({ imageFile }: ImagePreviewCardProps) {
             Queued...
           </div>
         )}
-        {imageFile.status === 'uploading' && ( // This status might be very brief or skipped with local compression
+        {imageFile.status === 'uploading' && ( 
           <div className="flex items-center text-sm text-primary">
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             Preparing...
