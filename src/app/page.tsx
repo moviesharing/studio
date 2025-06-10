@@ -10,12 +10,16 @@ import { Archive, Info } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import imageCompression from 'browser-image-compression';
+import { Slider } from "@/components/ui/slider";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const MAX_FILES = 10;
 
 export default function HomePage() {
   const [imageFiles, setImageFiles] = useState<ImageFile[]>([]);
+  const [compressionQuality, setCompressionQuality] = useState(0.7);
   const { toast } = useToast();
 
   const updateImageFile = useCallback((id: string, updates: Partial<ImageFile>) => {
@@ -33,7 +37,7 @@ export default function HomePage() {
           maxSizeMB: 2, 
           maxWidthOrHeight: 1920, 
           useWebWorker: true,
-          initialQuality: 0.7, 
+          initialQuality: compressionQuality, 
           alwaysKeepResolution: false, 
           onProgress: (p: number) => {
             updateImageFile(fileToProcess.id, { progress: p });
@@ -75,7 +79,7 @@ export default function HomePage() {
         });
       }
     },
-    [updateImageFile, toast]
+    [updateImageFile, toast, compressionQuality]
   );
 
   const handleFilesAdded = useCallback(
@@ -140,6 +144,40 @@ export default function HomePage() {
           </header>
 
           <ImageUploader onFilesAdded={handleFilesAdded} />
+
+          <Card className="bg-card shadow">
+            <CardHeader>
+              <CardTitle className="text-xl font-semibold">Compression Settings</CardTitle>
+              <CardDescription>
+                Adjust the desired quality for image compression. This setting applies to newly uploaded images.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <Label htmlFor="qualitySlider" className="text-base font-medium text-foreground/90">
+                    JPEG Quality
+                  </Label>
+                  <span className="text-sm font-semibold text-primary tabular-nums">
+                    {Math.round(compressionQuality * 100)}%
+                  </span>
+                </div>
+                <Slider
+                  id="qualitySlider"
+                  min={0.1}
+                  max={1.0}
+                  step={0.05}
+                  value={[compressionQuality]}
+                  onValueChange={(value) => setCompressionQuality(value[0])}
+                  className="w-full"
+                  aria-label={`Compression quality ${Math.round(compressionQuality * 100)}%`}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Lower values result in smaller file sizes but may reduce image quality. Higher values retain more quality but result in larger files.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
           
           <Alert variant="default" className="bg-accent/50 border-primary/30">
             <Info className="h-5 w-5 text-primary" />
