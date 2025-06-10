@@ -36,20 +36,20 @@ export default function HomePage() {
 
       try {
         const options = {
-          maxSizeMB: 2, 
-          maxWidthOrHeight: 1920, 
+          maxSizeMB: 2,
+          maxWidthOrHeight: 1920,
           useWebWorker: true,
-          initialQuality: compressionQuality, 
-          alwaysKeepResolution: false, 
+          initialQuality: compressionQuality,
+          alwaysKeepResolution: false,
           onProgress: (p: number) => {
             updateImageFile(fileToProcess.id, { progress: p });
           },
-          fileType: 'image/jpeg', 
+          fileType: 'image/jpeg',
         };
 
         const compressedBlob = await imageCompression(fileToProcess.file, options);
-        
-        const compressedFile = new File([compressedBlob], `jpegify_${fileToProcess.file.name}`, {
+
+        const compressedFile = new File([compressedBlob], fileToProcess.file.name, {
           type: compressedBlob.type,
           lastModified: Date.now(),
         });
@@ -96,7 +96,7 @@ export default function HomePage() {
     if (filesToStartNow.length > 0) {
       setActiveCompressions(prev => prev + filesToStartNow.length);
       filesToStartNow.forEach(file => {
-        updateImageFile(file.id, { status: 'queued' }); 
+        updateImageFile(file.id, { status: 'queued' });
         doCompressImage(file);
       });
     }
@@ -119,7 +119,7 @@ export default function HomePage() {
         .map((file) => ({
           id: `${file.name}-${Date.now()}-${Math.random()}`,
           file,
-          status: "pending", // New files are added as pending
+          status: "pending",
           progress: 0,
           originalSize: file.size,
         }));
@@ -134,11 +134,10 @@ export default function HomePage() {
         setImageFiles((prev) => [...prev, ...filesToActuallyAdd]);
         return;
       }
-      
+
       setImageFiles((prev) => [...prev, ...newImageFiles]);
-      // The useEffect hook will now pick up these 'pending' files
     },
-    [toast, imageFiles.length] 
+    [toast, imageFiles.length]
   );
 
   const handleBatchDownload = () => {
@@ -147,7 +146,7 @@ export default function HomePage() {
       description: "Simulating ZIP download of all compressed images. This feature is for demonstration purposes.",
     });
   };
-  
+
   const allProcessedOrErrored = imageFiles.length > 0 && imageFiles.every(f => f.status === 'compressed' || f.status === 'error');
   const anyCompressedSuccessfully = imageFiles.some(f => f.status === 'compressed');
   const processingInProgress = activeCompressions > 0 || imageFiles.some(f => f.status === 'pending' || f.status === 'queued' || f.status === 'compressing');
@@ -199,7 +198,7 @@ export default function HomePage() {
               </div>
             </CardContent>
           </Card>
-          
+
           <Alert variant="default" className="bg-accent/50 border-primary/30">
             <Info className="h-5 w-5 text-primary" />
             <AlertTitle className="font-semibold text-primary/90">In-Browser Compression</AlertTitle>
@@ -212,8 +211,8 @@ export default function HomePage() {
             <section className="space-y-6">
               <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
                 <h2 className="text-3xl font-semibold font-headline">Your Images</h2>
-                <Button 
-                  onClick={handleBatchDownload} 
+                <Button
+                  onClick={handleBatchDownload}
                   disabled={!allProcessedOrErrored || !anyCompressedSuccessfully || processingInProgress}
                   size="lg"
                 >
