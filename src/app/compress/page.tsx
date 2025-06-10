@@ -17,7 +17,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import AdSenseAdUnit from "@/components/adsense-ad-unit";
-import Link from "next/link";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const MAX_FILES = 10;
@@ -253,7 +252,7 @@ export default function JPEGifyAppPage() {
 
 
   return (
-    <div className="flex flex-col min-h-[calc(100vh-4rem)] text-foreground">
+    <div className="flex flex-col min-h-[calc(100vh-4rem)] text-foreground"> {/* Adjusted min-h to account for header, footer will be outside */}
       <main className="flex-grow container mx-auto px-4 py-8 sm:px-6 lg:px-8">
         <div className="w-full max-w-5xl mx-auto space-y-10">
           <header className="text-center space-y-2">
@@ -394,16 +393,7 @@ export default function JPEGifyAppPage() {
           )}
         </div>
       </main>
-      <footer className="py-8 text-center text-sm text-muted-foreground border-t">
-        <div className="container mx-auto px-4 flex flex-col sm:flex-row justify-center items-center gap-x-6 gap-y-2">
-          <span>JPEGify &amp;copy; {new Date().getFullYear()}.</span>
-          <nav className="flex gap-x-4 gap-y-2 flex-wrap justify-center">
-            <Link href="/privacy-policy" className="hover:text-primary hover:underline">Privacy Policy</Link>
-            <Link href="/terms-conditions" className="hover:text-primary hover:underline">Terms &amp; Conditions</Link>
-            <Link href="/contact" className="hover:text-primary hover:underline">Contact</Link>
-          </nav>
-        </div>
-      </footer>
+      {/* Footer removed as it's now in RootLayout */}
     </div>
   );
 }

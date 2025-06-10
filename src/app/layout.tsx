@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { SiteHeader } from "@/components/site-header";
 import Script from 'next/script';
 import { CookieConsentPopup } from "@/components/cookie-consent-popup";
+import { SiteFooter } from "@/components/site-footer";
 
 export const metadata: Metadata = {
   title: "JPEGify - Smart Image Compression",
@@ -36,6 +37,7 @@ export default function RootLayout({
         <div className="relative flex min-h-screen flex-col bg-background">
           <SiteHeader />
           <div className="flex-1">{children}</div>
+          <SiteFooter />
         </div>
         <Toaster />
         <CookieConsentPopup />
