@@ -29,8 +29,6 @@ const AdSenseAdUnit: React.FC<AdSenseAdUnitProps> = ({
   const isDev = process.env.NODE_ENV === 'development';
 
   useEffect(() => {
-    // Only attempt to push ads if not in dev mode (where we show a dummy ad)
-    // and if not using placeholder IDs (where we show a config warning)
     const isUsingPlaceholders = adClient === PLACEHOLDER_AD_CLIENT || adSlot === PLACEHOLDER_AD_SLOT;
     if (isDev || isUsingPlaceholders || !adClient || !adSlot) {
       return;
@@ -45,18 +43,18 @@ const AdSenseAdUnit: React.FC<AdSenseAdUnitProps> = ({
         console.error("AdSense push error:", e);
       }
     }
-  }, [adSlot, adClient, adFormat, isDev]);
+  }, [adSlot, adClient, adFormat, isDev]); // Dependencies updated
 
   const isUsingPlaceholderClient = adClient === PLACEHOLDER_AD_CLIENT;
   const isUsingPlaceholderSlot = adSlot === PLACEHOLDER_AD_SLOT;
 
   if (!adClient || !adSlot || isUsingPlaceholderClient || isUsingPlaceholderSlot) {
-    let message = "AdSense Ad Unit Configuration Error:";
+    let message = "";
     if (!adClient || isUsingPlaceholderClient) {
-      message += " 'adClient' prop is missing or uses a placeholder. Please provide your actual AdSense Publisher ID.";
+      message += " 'adClient' prop is missing or uses a placeholder. Please provide your actual AdSense Publisher ID (ca-pub-XXXXXXXXXXXXXXXX). ";
     }
     if (!adSlot || isUsingPlaceholderSlot) {
-      message += " 'adSlot' prop is missing or uses a placeholder. Please provide your actual Ad Slot ID.";
+      message += " 'adSlot' prop is missing or uses a placeholder. Please provide your actual Ad Slot ID (e.g., 1234567890). ";
     }
     return (
       <div
@@ -65,11 +63,11 @@ const AdSenseAdUnit: React.FC<AdSenseAdUnitProps> = ({
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          background: '#fff0f0',
-          color: '#a00',
+          background: 'hsl(var(--destructive) / 0.05)', // Lighter destructive background
+          color: 'hsl(var(--destructive))', // Destructive text color
           padding: '20px',
-          border: '2px dashed #d00',
-          borderRadius: '8px',
+          border: '1px solid hsl(var(--destructive) / 0.7)', // Destructive border
+          borderRadius: 'var(--radius)',
           textAlign: 'center',
           margin: '20px 0',
           fontSize: '14px',
@@ -78,8 +76,8 @@ const AdSenseAdUnit: React.FC<AdSenseAdUnitProps> = ({
         className="adsense-warning-placeholder"
       >
         <p style={{fontWeight: 'bold', fontSize: '16px', marginBottom: '10px'}}>AdSense Configuration Needed</p>
-        <p>{message}</p>
-        <p style={{marginTop: '10px', fontSize: '12px'}}>
+        <p>{message.trim()}</p>
+        <p style={{marginTop: '10px', fontSize: '12px', opacity: 0.8}}>
           Ensure you've also updated the AdSense Publisher ID in the main script tag in `src/app/layout.tsx`.
           This ad unit will not display correctly until configured.
         </p>
@@ -92,15 +90,16 @@ const AdSenseAdUnit: React.FC<AdSenseAdUnitProps> = ({
       <div
         style={{
           display: 'flex',
+          flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          background: '#e9e9e9', // Lighter grey for dummy ad
-          color: '#555',
-          border: '2px dashed #bbb',
-          borderRadius: '8px',
+          background: 'hsl(var(--muted) / 0.7)', // Using muted for background
+          color: 'hsl(var(--muted-foreground))',    // Muted foreground for text
+          border: '1px solid hsl(var(--border))',      // Using theme border color
+          borderRadius: 'var(--radius)',            // Using theme radius
           textAlign: 'center',
           padding: '20px',
-          minHeight: '90px', // Typical banner height
+          minHeight: '90px', 
           width: '100%',
           margin: '20px 0',
           fontSize: '14px',
@@ -108,8 +107,10 @@ const AdSenseAdUnit: React.FC<AdSenseAdUnitProps> = ({
         }}
         className="adsense-dummy-placeholder"
       >
-        <p style={{fontWeight: 'bold'}}>Ad Placeholder</p>
-        <p style={{fontSize: '12px', marginTop: '5px'}}>(Visible in Development Mode Only - AdSense ads would appear here in production)</p>
+        <p style={{fontWeight: '600', color: 'hsl(var(--foreground))'}}>Ad Placeholder</p> {/* Slightly bolder and foreground color */}
+        <p style={{fontSize: '12px', marginTop: '5px'}}>
+          (AdSense ads would appear here in production)
+        </p>
       </div>
     );
   }
@@ -126,7 +127,7 @@ const AdSenseAdUnit: React.FC<AdSenseAdUnitProps> = ({
         data-ad-format={adFormat}
         data-full-width-responsive={fullWidthResponsive ? "true" : "false"}
         data-ad-layout-key={adLayoutKey}
-        aria-hidden="true" // To hide from screen readers if it's an empty container before ad loads
+        aria-hidden="true"
       />
     </div>
   );
