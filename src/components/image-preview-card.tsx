@@ -6,7 +6,7 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Download, Loader2, CheckCircle2, AlertTriangle, FileImage } from "lucide-react"; // XCircle removed as it was unused
+import { Download, Loader2, CheckCircle2, AlertTriangle, FileImage } from "lucide-react";
 
 interface ImagePreviewCardProps {
   imageFile: ImageFile;
@@ -14,17 +14,43 @@ interface ImagePreviewCardProps {
 
 function ImagePreviewCardComponent({ imageFile }: ImagePreviewCardProps) {
   const [internalPreviewUrl, setInternalPreviewUrl] = useState<string | null>(null);
+  const [compressedPreviewUrl, setCompressedPreviewUrl] = useState<string | null>(null);
 
   useEffect(() => {
+    let objectUrl: string | null = null;
     if (imageFile?.file) {
-      const url = URL.createObjectURL(imageFile.file);
-      setInternalPreviewUrl(url);
-      return () => {
-        URL.revokeObjectURL(url);
-        setInternalPreviewUrl(null); 
-      };
+      objectUrl = URL.createObjectURL(imageFile.file);
+      setInternalPreviewUrl(objectUrl);
+    } else {
+      setInternalPreviewUrl(null); // Ensure cleanup if file becomes null
     }
+
+    return () => {
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+      // Set to null on unmount or if file changes and new URL isn't generated
+      // This helps if the component re-renders without a file prop initially
+      if (!imageFile?.file) setInternalPreviewUrl(null);
+    };
   }, [imageFile?.file]);
+
+  useEffect(() => {
+    let objectUrl: string | null = null;
+    if (imageFile?.compressedFile) {
+      objectUrl = URL.createObjectURL(imageFile.compressedFile);
+      setCompressedPreviewUrl(objectUrl);
+    } else {
+      setCompressedPreviewUrl(null); // Ensure cleanup
+    }
+
+    return () => {
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+      if (!imageFile?.compressedFile) setCompressedPreviewUrl(null);
+    };
+  }, [imageFile?.compressedFile]);
 
 
   const handleDownload = () => {
@@ -36,7 +62,7 @@ function ImagePreviewCardComponent({ imageFile }: ImagePreviewCardProps) {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      URL.revokeObjectURL(url); 
+      URL.revokeObjectURL(url);
     } else {
       console.warn("Download attempted on a non-compressed or missing file.");
     }
@@ -59,15 +85,38 @@ function ImagePreviewCardComponent({ imageFile }: ImagePreviewCardProps) {
     return null;
   }
 
+  const showSideBySide = imageFile.status === 'compressed' && internalPreviewUrl && compressedPreviewUrl;
+
   return (
     <Card className="overflow-hidden shadow-lg flex flex-col bg-card">
-      <CardHeader className="p-0 relative aspect-video">
-        {internalPreviewUrl ? (
-          <img
-            src={internalPreviewUrl}
-            alt={`Preview of ${imageFile.file.name}`}
-            className="absolute top-0 left-0 w-full h-full object-cover transition-opacity duration-300"
-          />
+      <CardHeader className="p-0 relative aspect-video flex flex-row">
+        {showSideBySide ? (
+          <>
+            <div className="w-1/2 h-full relative flex flex-col items-center justify-center border-r border-border">
+              <p className="absolute top-1 left-1 text-xs bg-black/50 text-white px-1 py-0.5 rounded">Original</p>
+              <img
+                src={internalPreviewUrl!}
+                alt={`Original preview of ${imageFile.file.name}`}
+                className="max-w-full max-h-full object-contain transition-opacity duration-300"
+              />
+            </div>
+            <div className="w-1/2 h-full relative flex flex-col items-center justify-center">
+               <p className="absolute top-1 left-1 text-xs bg-black/50 text-white px-1 py-0.5 rounded">Compressed</p>
+              <img
+                src={compressedPreviewUrl!}
+                alt={`Compressed preview of ${imageFile.file.name}`}
+                className="max-w-full max-h-full object-contain transition-opacity duration-300"
+              />
+            </div>
+          </>
+        ) : internalPreviewUrl ? (
+          <div className="w-full h-full flex items-center justify-center">
+            <img
+              src={internalPreviewUrl}
+              alt={`Preview of ${imageFile.file.name}`}
+              className="max-w-full max-h-full object-contain transition-opacity duration-300"
+            />
+          </div>
         ) : (
           <div className="w-full h-full bg-muted flex items-center justify-center">
             <FileImage className="w-16 h-16 text-muted-foreground" />
@@ -99,7 +148,7 @@ function ImagePreviewCardComponent({ imageFile }: ImagePreviewCardProps) {
             Queued...
           </div>
         )}
-        {imageFile.status === 'uploading' && ( // This status might be legacy/unused in current flow
+        {imageFile.status === 'uploading' && (
           <div className="flex items-center text-sm text-primary">
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             Preparing...
@@ -149,3 +198,4 @@ function ImagePreviewCardComponent({ imageFile }: ImagePreviewCardProps) {
 }
 
 export const ImagePreviewCard = React.memo(ImagePreviewCardComponent);
+
