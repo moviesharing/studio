@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 
 interface AdSenseAdUnitProps {
   adClient: string; // e.g., "ca-pub-XXXXXXXXXXXXXXXX"
@@ -25,13 +25,19 @@ const AdSenseAdUnit: React.FC<AdSenseAdUnitProps> = ({
   fullWidthResponsive = true,
   adLayoutKey,
 }) => {
+  const insRef = useRef<HTMLModElement>(null);
+
   useEffect(() => {
-    try {
-      if (typeof window !== 'undefined' && (window as any).adsbygoogle) {
-        ((window as any).adsbygoogle = (window as any).adsbygoogle || []).push({});
+    // Check if the ad slot seems to have been already processed or filled
+    if (insRef.current && insRef.current.innerHTML.trim() === '' && !insRef.current.dataset.adStatus) {
+      try {
+        if (typeof window !== 'undefined' && (window as any).adsbygoogle) {
+          // console.log(`Attempting to push ad for slot: ${adSlot}`);
+          ((window as any).adsbygoogle = (window as any).adsbygoogle || []).push({});
+        }
+      } catch (e) {
+        console.error("AdSense push error:", e);
       }
-    } catch (e) {
-      console.error("AdSense push error:", e);
     }
   }, [adSlot, adClient, adFormat]); // Re-run if critical ad parameters change
 
@@ -39,18 +45,19 @@ const AdSenseAdUnit: React.FC<AdSenseAdUnitProps> = ({
   const isUsingPlaceholderSlot = adSlot === PLACEHOLDER_AD_SLOT;
 
   if (!adClient || !adSlot || isUsingPlaceholderClient || isUsingPlaceholderSlot) {
-    let message = "AdSense Ad Unit Error:";
+    let message = "AdSense Ad Unit Configuration Error:";
     if (!adClient || isUsingPlaceholderClient) {
-      message += " 'adClient' prop is missing or is a placeholder. Please provide your actual AdSense Publisher ID.";
+      message += " 'adClient' prop is missing or uses a placeholder. Please provide your actual AdSense Publisher ID.";
     }
     if (!adSlot || isUsingPlaceholderSlot) {
-      message += " 'adSlot' prop is missing or is a placeholder. Please provide your actual Ad Slot ID.";
+      message += " 'adSlot' prop is missing or uses a placeholder. Please provide your actual Ad Slot ID.";
     }
-    console.warn("AdSenseAdUnit:", message);
+    // console.warn("AdSenseAdUnit:", message); // Already logged by the component structure below
     return (
       <div 
         style={{ 
           display: 'flex', 
+          flexDirection: 'column',
           alignItems: 'center', 
           justifyContent: 'center', 
           background: '#fff0f0', 
@@ -65,9 +72,12 @@ const AdSenseAdUnit: React.FC<AdSenseAdUnitProps> = ({
         }}
         className="adsense-warning-placeholder"
       >
-        {message}
-        <br />
-        Also, ensure you've updated the AdSense Publisher ID in the script tag in `src/app/layout.tsx`.
+        <p style={{fontWeight: 'bold', fontSize: '16px', marginBottom: '10px'}}>AdSense Configuration Needed</p>
+        <p>{message}</p>
+        <p style={{marginTop: '10px', fontSize: '12px'}}>
+          Ensure you've also updated the AdSense Publisher ID in the main script tag in `src/app/layout.tsx`. 
+          This ad unit will not display correctly until configured.
+        </p>
       </div>
     );
   }
@@ -82,6 +92,7 @@ const AdSenseAdUnit: React.FC<AdSenseAdUnitProps> = ({
         </div>
       )}
       <ins
+        ref={insRef}
         className={className}
         style={style}
         data-ad-client={adClient}
