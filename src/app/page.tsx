@@ -1,12 +1,12 @@
 
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import type { ImageFile } from "@/types";
 import { ImageUploader } from "@/components/image-uploader";
 import { ImagePreviewCard } from "@/components/image-preview-card";
 import { Button } from "@/components/ui/button";
-import { Archive, Info } from "lucide-react";
+import { Archive, Info, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import imageCompression from 'browser-image-compression';
@@ -16,10 +16,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const MAX_FILES = 10;
+const MAX_CONCURRENT_COMPRESSIONS = 3; // Max images to compress at once
 
 export default function HomePage() {
   const [imageFiles, setImageFiles] = useState<ImageFile[]>([]);
   const [compressionQuality, setCompressionQuality] = useState(0.7);
+  const [activeCompressions, setActiveCompressions] = useState(0);
   const { toast } = useToast();
 
   const updateImageFile = useCallback((id: string, updates: Partial<ImageFile>) => {
@@ -28,7 +30,7 @@ export default function HomePage() {
     );
   }, []);
 
-  const compressAndProcessImage = useCallback(
+  const doCompressImage = useCallback(
     async (fileToProcess: ImageFile) => {
       updateImageFile(fileToProcess.id, { status: "compressing", progress: 0 });
 
@@ -77,10 +79,28 @@ export default function HomePage() {
           description: `${fileToProcess.file.name}: ${errorMessage}`,
           variant: "destructive",
         });
+      } finally {
+        setActiveCompressions((prev) => prev - 1);
       }
     },
     [updateImageFile, toast, compressionQuality]
   );
+
+  useEffect(() => {
+    let slotsToFill = MAX_CONCURRENT_COMPRESSIONS - activeCompressions;
+    if (slotsToFill <= 0) return;
+
+    const pendingFiles = imageFiles.filter(f => f.status === 'pending');
+    const filesToStartNow = pendingFiles.slice(0, slotsToFill);
+
+    if (filesToStartNow.length > 0) {
+      setActiveCompressions(prev => prev + filesToStartNow.length);
+      filesToStartNow.forEach(file => {
+        updateImageFile(file.id, { status: 'queued' }); 
+        doCompressImage(file);
+      });
+    }
+  }, [imageFiles, activeCompressions, doCompressImage, updateImageFile]);
 
   const handleFilesAdded = useCallback(
     (files: File[]) => {
@@ -99,7 +119,7 @@ export default function HomePage() {
         .map((file) => ({
           id: `${file.name}-${Date.now()}-${Math.random()}`,
           file,
-          status: "pending",
+          status: "pending", // New files are added as pending
           progress: 0,
           originalSize: file.size,
         }));
@@ -112,14 +132,13 @@ export default function HomePage() {
         });
         const filesToActuallyAdd = newImageFiles.slice(0, MAX_FILES - imageFiles.length);
         setImageFiles((prev) => [...prev, ...filesToActuallyAdd]);
-        filesToActuallyAdd.forEach(compressAndProcessImage);
         return;
       }
       
       setImageFiles((prev) => [...prev, ...newImageFiles]);
-      newImageFiles.forEach(compressAndProcessImage);
+      // The useEffect hook will now pick up these 'pending' files
     },
-    [compressAndProcessImage, toast, imageFiles.length]
+    [toast, imageFiles.length] 
   );
 
   const handleBatchDownload = () => {
@@ -129,8 +148,10 @@ export default function HomePage() {
     });
   };
   
-  const allProcessed = imageFiles.length > 0 && imageFiles.every(f => f.status === 'compressed' || f.status === 'error');
+  const allProcessedOrErrored = imageFiles.length > 0 && imageFiles.every(f => f.status === 'compressed' || f.status === 'error');
   const anyCompressedSuccessfully = imageFiles.some(f => f.status === 'compressed');
+  const processingInProgress = activeCompressions > 0 || imageFiles.some(f => f.status === 'pending' || f.status === 'queued' || f.status === 'compressing');
+
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground">
@@ -193,11 +214,15 @@ export default function HomePage() {
                 <h2 className="text-3xl font-semibold font-headline">Your Images</h2>
                 <Button 
                   onClick={handleBatchDownload} 
-                  disabled={!allProcessed || !anyCompressedSuccessfully}
+                  disabled={!allProcessedOrErrored || !anyCompressedSuccessfully || processingInProgress}
                   size="lg"
                 >
-                  <Archive className="mr-2 h-5 w-5" />
-                  Download All (ZIP Demo)
+                  {processingInProgress ? (
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  ) : (
+                    <Archive className="mr-2 h-5 w-5" />
+                  )}
+                  {processingInProgress ? 'Processing...' : 'Download All (ZIP Demo)'}
                 </Button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

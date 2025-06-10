@@ -2,7 +2,7 @@
 export interface ImageFile {
   id: string;
   file: File; // Original file
-  status: 'pending' | 'uploading' | 'compressing' | 'compressed' | 'error';
+  status: 'pending' | 'queued' | 'uploading' | 'compressing' | 'compressed' | 'error';
   progress: number;
   originalSize: number;
   compressedSize?: number;

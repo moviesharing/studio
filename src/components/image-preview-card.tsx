@@ -6,8 +6,7 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Download, Loader2, CheckCircle2, XCircle, FileImage, AlertTriangle } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Download, Loader2, CheckCircle2, AlertTriangle, FileImage } from "lucide-react"; // XCircle removed as it was unused
 
 interface ImagePreviewCardProps {
   imageFile: ImageFile;
@@ -17,12 +16,12 @@ function ImagePreviewCardComponent({ imageFile }: ImagePreviewCardProps) {
   const [internalPreviewUrl, setInternalPreviewUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    if (imageFile && imageFile.file) {
+    if (imageFile?.file) {
       const url = URL.createObjectURL(imageFile.file);
       setInternalPreviewUrl(url);
-
       return () => {
         URL.revokeObjectURL(url);
+        setInternalPreviewUrl(null); 
       };
     }
   }, [imageFile?.file]);
@@ -88,14 +87,19 @@ function ImagePreviewCardComponent({ imageFile }: ImagePreviewCardProps) {
           </p>
         )}
 
-
         {imageFile.status === 'pending' && (
           <div className="flex items-center text-sm text-muted-foreground">
-            <Loader2 className="mr-2 h-4 w-4 animate-spin text-primary" />
+            <Loader2 className="mr-2 h-4 w-4 animate-spin text-primary/70" />
+            Pending...
+          </div>
+        )}
+        {imageFile.status === 'queued' && (
+          <div className="flex items-center text-sm text-muted-foreground">
+            <Loader2 className="mr-2 h-4 w-4 animate-spin text-primary/80" />
             Queued...
           </div>
         )}
-        {imageFile.status === 'uploading' && ( 
+        {imageFile.status === 'uploading' && ( // This status might be legacy/unused in current flow
           <div className="flex items-center text-sm text-primary">
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             Preparing...
