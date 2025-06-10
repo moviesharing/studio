@@ -25,12 +25,6 @@ export default function TermsConditionsPage() {
           Conditions") carefully before using the JPEGify website (the
           "Service") operated by JPEGify ("us", "we", or "our").
         </p>
-        <p className="font-bold text-destructive">
-          Disclaimer: This is boilerplate content for Terms and Conditions. You
-          MUST replace this content with terms that accurately reflect your
-          service and comply with all applicable laws. Consult with a legal
-          professional.
-        </p>
         <p>
           Your access to and use of the Service is conditioned on your
           acceptance of and compliance with these Terms. These Terms apply to
