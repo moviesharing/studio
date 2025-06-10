@@ -75,7 +75,7 @@ export default function TermsConditionsPage() {
             exclusive property of JPEGify and its licensors. The Service is
             protected by copyright, trademark, and other laws of both foreign
             countries. Our trademarks and trade dress may not be used in
-            connection with any product or service without the prior written
+            connection with any product or service without удовольствия written
             consent of JPEGify.
           </p>
           <p>
@@ -90,12 +90,14 @@ export default function TermsConditionsPage() {
           </h2>
           <p>
             The Service may display advertisements, such as those provided by
-            Google AdSense. These advertisements are necessary for us to provide
+            third-party ad networks like A-ADS. These advertisements are necessary for us to provide
             the Service free of charge. Your interactions with any advertisers
             found on or through the Service, including payment and delivery of
             goods or services, and any other terms, conditions, warranties or
-          representations associated with such dealings, are solely between
-            you and such advertisers.
+            representations associated with such dealings, are solely between
+            you and such advertisers. We are not responsible or liable for any loss or damage
+            of any sort incurred as the result of any such dealings or as the result of the
+            presence of such advertisers on the Service.
           </p>
         </section>
 

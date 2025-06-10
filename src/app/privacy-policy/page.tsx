@@ -26,12 +26,6 @@ export default function PrivacyPolicyPage() {
           regarding the collection, use, and disclosure of personal data when you
           use our Service and the choices you have associated with that data.
         </p>
-        <p className="font-bold text-destructive">
-          Disclaimer: This is a boilerplate privacy policy. You MUST replace
-          this content with a policy that accurately reflects your data
-          handling practices and complies with all applicable laws. Consult
-          with a legal professional.
-        </p>
 
         <section className="space-y-3">
           <h2 className="text-2xl font-semibold text-primary/90">
@@ -74,22 +68,11 @@ export default function PrivacyPolicyPage() {
               example, to remember your cookie consent preferences.
             </li>
             <li>
-              <strong>Advertising Cookies:</strong> We use Google AdSense to
-              display advertisements on our Service. Google AdSense uses
-              cookies to serve ads based on a user's prior visits to our
-              website or other websites. Google's use of advertising cookies
-              enables it and its partners to serve ads to our users based on
-              their visit to our sites and/or other sites on the Internet. Users
-              may opt out of personalized advertising by visiting{" "}
-              <Link
-                href="https://www.google.com/settings/ads"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary hover:underline"
-              >
-                Ads Settings
-              </Link>
-              .
+              <strong>Advertising Cookies:</strong> We use third-party advertising services such as A-ADS.
+              These services may use cookies to serve ads. A-ADS states that they do not track users personally.
+              Users should consult the privacy policies of these third-party ad servers for more detailed information on their practices
+              as well as for instructions about how to opt-out of certain practices. JPEGify's privacy policy does not apply to,
+              and we cannot control the activities of, such other advertisers or web sites.
             </li>
           </ul>
           <p>
@@ -102,34 +85,21 @@ export default function PrivacyPolicyPage() {
 
         <section className="space-y-3">
           <h2 className="text-2xl font-semibold text-primary/90">
-            Service Providers (Google AdSense)
+            Service Providers (Advertising)
           </h2>
           <p>
-            We use third-party Service Providers to facilitate our Service, to
+            We may use third-party Service Providers to facilitate our Service, to
             provide the Service on our behalf, or to assist us in analyzing how
-            our Service is used. Specifically, we use Google AdSense for
-            advertising.
+            our Service is used. This includes third-party ad networks like A-ADS.
           </p>
           <p>
-            Google AdSense, as a third-party vendor, uses cookies to serve ads
-            on our Service. Google's use of the DART cookie (or similar
-            technologies) enables it to serve ads to our users based on their
-            visit to our Service and other sites on the Internet. Users may opt
-            out of the use of the DART cookie by visiting the Google ad and
-            content network privacy policy. For more information on the privacy
-            practices of Google, please visit the Google Privacy &amp; Terms web
-            page:{" "}
-            <Link
-              href="https://policies.google.com/privacy"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary hover:underline"
-            >
-              https://policies.google.com/privacy
-            </Link>
+            These third parties may have access to some of your data (e.g., through cookies or ad impressions)
+            only to perform these tasks on our behalf and are obligated not to disclose or use it for any other purpose,
+            according to their respective privacy policies. We recommend reviewing the privacy policy of any third-party
+            advertiser (e.g., A-ADS via their website) for more information on their data practices.
           </p>
         </section>
-        
+
         <section className="space-y-3">
           <h2 className="text-2xl font-semibold text-primary/90">Data Security</h2>
           <p>

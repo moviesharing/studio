@@ -16,7 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import AdSenseAdUnit from "@/components/adsense-ad-unit";
+import AAdsUnit from "@/components/a-ads-unit";
 
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -78,7 +78,7 @@ export function CompressPageContent() {
 
       try {
         const options: imageCompression.Options = {
-          maxSizeMB: 5, 
+          maxSizeMB: 5,
           useWebWorker: true,
           initialQuality: compressionQuality,
           onProgress: (p: number) => {
@@ -86,7 +86,7 @@ export function CompressPageContent() {
           },
           fileType: 'image/jpeg',
         };
-        
+
         if (removeMetadata) {
           // browser-image-compression generally strips most metadata by default.
         }
@@ -98,7 +98,7 @@ export function CompressPageContent() {
           options.alwaysKeepResolution = false;
           options.maxWidthOrHeight = parseInt(targetResolution, 10);
         }
-        
+
         const compressedBlob = await imageCompression(fileToProcess.file, options);
 
         const compressedFile = new File([compressedBlob], fileToProcess.file.name, {
@@ -135,9 +135,9 @@ export function CompressPageContent() {
         setActiveCompressions((prev) => Math.max(0, prev - 1));
       }
     },
-    [updateImageFile, toast, compressionQuality, targetResolution, removeMetadata] 
+    [updateImageFile, toast, compressionQuality, targetResolution, removeMetadata]
   );
-  
+
   useEffect(() => {
     let slotsToFill = MAX_CONCURRENT_COMPRESSIONS - activeCompressions;
     if (slotsToFill <= 0 || imageFiles.every(f => f.status !== 'pending')) return;
@@ -260,14 +260,11 @@ export function CompressPageContent() {
           </header>
 
           <ImageUploader onFilesAdded={handleFilesAdded} />
-          
+
           {anyCompressedSuccessfully && (
-            <AdSenseAdUnit
-              adClient="ca-pub-0000000000000000" 
-              adSlot="0000000000"      
-              adFormat="auto"
-              fullWidthResponsive={true}
-            />
+            <div className="my-6">
+              <AAdsUnit adUnitId="2398113" />
+            </div>
           )}
 
           <Card className="bg-card shadow-lg">
@@ -327,7 +324,7 @@ export function CompressPageContent() {
                     id="qualitySlider"
                     min={0.1}
                     max={1.0}
-                    step={0.01} 
+                    step={0.01}
                     value={[compressionQuality]}
                     onValueChange={handleQualityChange}
                     className="w-full"
@@ -338,7 +335,7 @@ export function CompressPageContent() {
                   </p>
                 </div>
               )}
-              
+
               <div className="space-y-2">
                 <Label className="text-base font-medium text-foreground/90">Advanced Options</Label>
                 <div className="flex items-center space-x-2">

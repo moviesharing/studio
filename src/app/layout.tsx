@@ -3,20 +3,16 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { SiteHeader } from "@/components/site-header";
-import Script from 'next/script';
+// Script import for AdSense is removed
 import { CookieConsentPopup } from "@/components/cookie-consent-popup";
 import { SiteFooter } from "@/components/site-footer";
 
-// IMPORTANT: Ensure NEXT_PUBLIC_SITE_URL is set in your environment variables
-// (e.g., in Cloudflare Pages settings) to your full production domain for metadataBase.
-// Example: https://www.yourdomain.com
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://jpegify.pages.dev'; // Fallback to actual domain
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://jpegify.pages.dev/';
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: "JPEGify - Smart Image Compression",
   description: "Compress JPEGs efficiently with JPEGify. Secure, client-side image optimization.",
-  // Add Open Graph and other relevant metadata tags here for better sharing and SEO
   openGraph: {
     title: "JPEGify - Smart Image Compression",
     description: "Instantly compress JPEGs in your browser. Secure, private, and easy to use.",
@@ -24,7 +20,7 @@ export const metadata: Metadata = {
     siteName: "JPEGify",
     images: [
       {
-        url: `${siteUrl}/og-image.png`, // IMPORTANT: Create an og-image.png in your /public folder (e.g., 1200x630px)
+        url: `${siteUrl}og-image.png`, // Ensure leading slash is handled by siteUrl or add here
         width: 1200,
         height: 630,
         alt: "JPEGify - Smart Image Compression",
@@ -37,16 +33,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: "JPEGify - Smart Image Compression",
     description: "Compress JPEGs efficiently with JPEGify. Secure, client-side image optimization.",
-    // images: [`${siteUrl}/twitter-image.png`], // IMPORTANT: Create a twitter-image.png in your /public folder
-    // creator: '@yourtwitterhandle', // Optional: if you have a Twitter handle
   },
-  // Optional: Add more specific metadata as needed
-  // manifest: '/site.webmanifest', // If you add a web app manifest
-  // icons: { // For favicons
-  //   icon: '/favicon.ico',
-  //   shortcut: '/favicon-16x16.png',
-  //   apple: '/apple-touch-icon.png',
-  // },
 };
 
 export default function RootLayout({
@@ -63,12 +50,7 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
           rel="stylesheet"
         />
-        <Script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-0000000000000000" // IMPORTANT: Replace ca-pub-0000000000000000 with your actual AdSense Publisher ID
-          crossOrigin="anonymous"
-          strategy="afterInteractive" 
-        />
+        {/* Google AdSense Script tag removed */}
       </head>
       <body className="font-body antialiased">
         <div className="relative flex min-h-screen flex-col bg-background">
