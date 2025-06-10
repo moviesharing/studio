@@ -10,6 +10,7 @@ import { Archive, Info, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import imageCompression from 'browser-image-compression';
+import JSZip from 'jszip';
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -97,7 +98,10 @@ export default function HomePage() {
       setActiveCompressions(prev => prev + filesToStartNow.length);
       filesToStartNow.forEach(file => {
         updateImageFile(file.id, { status: 'queued' });
-        doCompressImage(file);
+        // Ensure doCompressImage is called after state update
+        // This might need a slight refactor if React batches state updates too aggressively
+        // For now, direct call should mostly work given the flow.
+        doCompressImage(file); 
       });
     }
   }, [imageFiles, activeCompressions, doCompressImage, updateImageFile]);
@@ -140,11 +144,55 @@ export default function HomePage() {
     [toast, imageFiles.length]
   );
 
-  const handleBatchDownload = () => {
+  const handleBatchDownload = async () => {
+    const compressedFilesToDownload = imageFiles.filter(
+      (f) => f.status === "compressed" && f.compressedFile
+    );
+
+    if (compressedFilesToDownload.length === 0) {
+      toast({
+        title: "No Compressed Images",
+        description: "There are no successfully compressed images to download.",
+        variant: "default",
+      });
+      return;
+    }
+
     toast({
-      title: "Batch Download (Demo)",
-      description: "Simulating ZIP download of all compressed images. This feature is for demonstration purposes.",
+      title: "Preparing ZIP...",
+      description: `Zipping ${compressedFilesToDownload.length} compressed images.`,
     });
+
+    const zip = new JSZip();
+    compressedFilesToDownload.forEach((imageFile) => {
+      if (imageFile.compressedFile) {
+        zip.file(imageFile.compressedFile.name, imageFile.compressedFile);
+      }
+    });
+
+    try {
+      const zipBlob = await zip.generateAsync({ type: "blob" });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(zipBlob);
+      link.download = 'jpegify_compressed_images.zip';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(link.href);
+
+      toast({
+        title: "Download Started",
+        description: "Your ZIP file should begin downloading shortly.",
+      });
+    } catch (error) {
+      console.error("Error creating ZIP file:", error);
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      toast({
+        title: "ZIP Creation Failed",
+        description: `Could not create ZIP file: ${errorMessage}`,
+        variant: "destructive",
+      });
+    }
   };
 
   const allProcessedOrErrored = imageFiles.length > 0 && imageFiles.every(f => f.status === 'compressed' || f.status === 'error');
@@ -203,7 +251,7 @@ export default function HomePage() {
             <Info className="h-5 w-5 text-primary" />
             <AlertTitle className="font-semibold text-primary/90">In-Browser Compression</AlertTitle>
             <AlertDescription className="text-primary/80">
-              JPEGify compresses images directly in your browser. Your files are not uploaded to any server. The batch download (ZIP) feature is currently a demonstration.
+              JPEGify compresses images directly in your browser. Your files are not uploaded to any server.
             </AlertDescription>
           </Alert>
 
@@ -221,7 +269,7 @@ export default function HomePage() {
                   ) : (
                     <Archive className="mr-2 h-5 w-5" />
                   )}
-                  {processingInProgress ? 'Processing...' : 'Download All (ZIP Demo)'}
+                  {processingInProgress ? 'Processing...' : 'Download All Compressed'}
                 </Button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
