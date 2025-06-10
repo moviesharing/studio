@@ -4,7 +4,7 @@ import type { MetadataRoute } from 'next'
 // IMPORTANT: Ensure NEXT_PUBLIC_SITE_URL is set in your environment variables
 // (e.g., in Cloudflare Pages settings) to your full production domain.
 // Example: https://www.yourdomain.com
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:9002'; // Fallback for local dev
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://jpegify.pages.dev'; // Fallback to actual domain
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const staticPages = [

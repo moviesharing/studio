@@ -10,7 +10,7 @@ import { SiteFooter } from "@/components/site-footer";
 // IMPORTANT: Ensure NEXT_PUBLIC_SITE_URL is set in your environment variables
 // (e.g., in Cloudflare Pages settings) to your full production domain for metadataBase.
 // Example: https://www.yourdomain.com
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:9002'; // Fallback for local dev
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://jpegify.pages.dev'; // Fallback to actual domain
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
