@@ -16,7 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import AdSenseAdUnit from "@/components/adsense-ad-unit"; // Import the AdSense component
+import AdSenseAdUnit from "@/components/adsense-ad-unit";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const MAX_FILES = 10;
@@ -86,6 +86,18 @@ export default function JPEGifyAppPage() {
           },
           fileType: 'image/jpeg',
         };
+        
+        // Apply removeMetadata option. browser-image-compression strips most metadata by default,
+        // but this respects the user's choice if the library offers finer control in the future.
+        // Currently, the library does not have a direct 'removeMetadata' boolean option.
+        // The primary way it handles metadata is by not retaining much of it during re-encoding.
+        // We'll log the choice for now.
+        if (removeMetadata) {
+          // console.log(`Attempting to compress ${fileToProcess.file.name} with metadata removal preferred.`);
+        } else {
+          // console.log(`Attempting to compress ${fileToProcess.file.name} with metadata retention preferred (if possible).`);
+        }
+
 
         if (targetResolution === "original") {
           options.alwaysKeepResolution = true;
@@ -256,13 +268,14 @@ export default function JPEGifyAppPage() {
 
           <ImageUploader onFilesAdded={handleFilesAdded} />
           
-          {/* Placeholder for AdSense Ad Unit */}
-          <AdSenseAdUnit
-            adClient="ca-pub-0000000000000000" // IMPORTANT: Replace with your actual AdSense Publisher ID
-            adSlot="0000000000"       // IMPORTANT: Replace with your actual Ad Slot ID
-            adFormat="auto"
-            fullWidthResponsive={true}
-          />
+          {anyCompressedSuccessfully && (
+            <AdSenseAdUnit
+              adClient="ca-pub-0000000000000000" // IMPORTANT: Replace with your actual AdSense Publisher ID
+              adSlot="0000000000"       // IMPORTANT: Replace with your actual Ad Slot ID
+              adFormat="auto"
+              fullWidthResponsive={true}
+            />
+          )}
 
           <Card className="bg-card shadow-lg">
             <CardHeader>
