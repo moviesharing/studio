@@ -34,28 +34,30 @@ console.log("Firebase Module: Constructed firebaseConfig object to be used for i
 
 // CRITICAL CHECK FOR API KEY
 if (!firebaseConfig.apiKey || firebaseConfig.apiKey.trim() === "") {
-  console.error(
+  const errorMessage =
     "CRITICAL FIREBASE CONFIGURATION ERROR: NEXT_PUBLIC_FIREBASE_API_KEY is MISSING, UNDEFINED, or an EMPTY STRING. " +
     "Firebase cannot initialize without a valid API Key. " +
     "Please check your .env.local file in the project root directory. It should contain a line like: \n" +
     "NEXT_PUBLIC_FIREBASE_API_KEY=\"YOUR_ACTUAL_API_KEY_HERE\"\n" +
     "Ensure the variable name is correct, the value is your actual API key from the Firebase console, " +
-    "and that you have FULLY RESTARTED your Next.js development server (e.g., Ctrl+C and then 'npm run dev') after any changes to the .env.local file."
-  );
-  // Firebase will throw its own error, but this makes it very explicit in the logs.
+    "and that you have FULLY RESTARTED your Next.js development server (e.g., Ctrl+C and then 'npm run dev') after any changes to the .env.local file.";
+  console.error(errorMessage);
+  // Explicitly throw an error to halt execution here if the key is missing.
+  // This will be the error you see if the .env.local file is not set up correctly.
+  throw new Error(errorMessage);
 }
 
 let app: FirebaseApp;
 
+// This part will now only be reached if the API key check above passes.
 if (!getApps().length) {
   try {
-    console.log("Firebase Module: No existing Firebase apps detected by getApps(). Attempting to initialize a new app with the above config...");
+    console.log("Firebase Module: No existing Firebase apps detected by getApps(). Attempting to initialize a new app with the (now verified to have an API key) config...");
     app = initializeApp(firebaseConfig);
     console.log("Firebase Module: Firebase app initialized successfully via initializeApp().");
   } catch (error) {
-    console.error("Firebase Module: Error during initializeApp(firebaseConfig):", error);
-    // Re-throw to ensure Next.js catches and displays it, and it's visible in logs.
-    // The original error from Firebase (like auth/invalid-api-key) is often more specific.
+    console.error("Firebase Module: Error during initializeApp(firebaseConfig) even after API key presence was checked (this could be other invalid config values):", error);
+    // Re-throw to ensure Next.js catches and displays it.
     throw error;
   }
 } else {
