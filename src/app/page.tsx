@@ -2,28 +2,15 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
-import { Loader2, Image as ImageIcon } from "lucide-react";
+import { Image as ImageIcon, ArrowRight } from "lucide-react";
 
 export default function LandingPage() {
-  const { user, signInWithGoogle, loading } = useAuth();
   const router = useRouter();
 
-  useEffect(() => {
-    if (!loading && user) {
-      router.push("/compress");
-    }
-  }, [user, loading, router]);
-
-  if (loading || (!loading && user)) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <Loader2 className="h-16 w-16 animate-spin text-primary" />
-      </div>
-    );
-  }
+  const handleGetStarted = () => {
+    router.push("/compress");
+  };
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -44,15 +31,10 @@ export default function LandingPage() {
           <div className="mt-8 sm:mt-10">
             <Button
               size="lg"
-              onClick={signInWithGoogle}
+              onClick={handleGetStarted}
               className="w-full max-w-xs mx-auto text-lg"
-              disabled={loading}
             >
-              {loading ? (
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-              ) : (
-                "Sign In with Google to Get Started"
-              )}
+              Get Started <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </div>
           <p className="mt-6 text-xs text-muted-foreground">

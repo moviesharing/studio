@@ -2,12 +2,11 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
-import { AuthProvider } from "@/contexts/auth-context";
 import { SiteHeader } from "@/components/site-header";
 
 export const metadata: Metadata = {
   title: "JPEGify - Smart Image Compression",
-  description: "Compress JPEGs efficiently with JPEGify. Secure, client-side image optimization. Sign in to start compressing!",
+  description: "Compress JPEGs efficiently with JPEGify. Secure, client-side image optimization.",
 };
 
 export default function RootLayout({
@@ -26,13 +25,11 @@ export default function RootLayout({
         />
       </head>
       <body className="font-body antialiased">
-        <AuthProvider>
-          <div className="relative flex min-h-screen flex-col bg-background">
-            <SiteHeader />
-            <div className="flex-1">{children}</div>
-          </div>
-          <Toaster />
-        </AuthProvider>
+        <div className="relative flex min-h-screen flex-col bg-background">
+          <SiteHeader />
+          <div className="flex-1">{children}</div>
+        </div>
+        <Toaster />
       </body>
     </html>
   );

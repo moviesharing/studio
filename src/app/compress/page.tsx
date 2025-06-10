@@ -14,13 +14,12 @@ import JSZip from 'jszip';
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import AuthGuard from "@/components/auth-guard";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const MAX_FILES = 10;
 const MAX_CONCURRENT_COMPRESSIONS = 3;
 
-function JPEGifyAppPage() {
+export default function JPEGifyAppPage() {
   const [imageFiles, setImageFiles] = useState<ImageFile[]>([]);
   const [compressionQuality, setCompressionQuality] = useState(0.7);
   const [activeCompressions, setActiveCompressions] = useState(0);
@@ -195,7 +194,6 @@ function JPEGifyAppPage() {
     }
   };
 
-  const allProcessedOrErrored = imageFiles.length > 0 && imageFiles.every(f => f.status === 'compressed' || f.status === 'error');
   const anyCompressedSuccessfully = imageFiles.some(f => f.status === 'compressed');
   const processingInProgress = activeCompressions > 0 || imageFiles.some(f => f.status === 'pending' || f.status === 'queued' || f.status === 'compressing');
 
@@ -285,13 +283,5 @@ function JPEGifyAppPage() {
         JPEGify &copy; {new Date().getFullYear()}.
       </footer>
     </div>
-  );
-}
-
-export default function CompressPage() {
-  return (
-    <AuthGuard>
-      <JPEGifyAppPage />
-    </AuthGuard>
   );
 }
