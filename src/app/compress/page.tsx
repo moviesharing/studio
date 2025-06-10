@@ -316,29 +316,31 @@ export default function JPEGifyAppPage() {
                 </div>
               </div>
 
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <Label htmlFor="qualitySlider" className="text-base font-medium text-foreground/90">
-                    JPEG Quality
-                  </Label>
-                  <span className="text-sm font-semibold text-primary tabular-nums">
-                    {Math.round(compressionQuality * 100)}%
-                  </span>
+              {selectedPreset === "custom" && (
+                <div className="space-y-3 pt-4 border-t border-border">
+                   <div className="flex justify-between items-center">
+                    <Label htmlFor="qualitySlider" className="text-base font-medium text-foreground/90">
+                      JPEG Quality
+                    </Label>
+                    <span className="text-sm font-semibold text-primary tabular-nums">
+                      {Math.round(compressionQuality * 100)}%
+                    </span>
+                  </div>
+                  <Slider
+                    id="qualitySlider"
+                    min={0.1}
+                    max={1.0}
+                    step={0.01} 
+                    value={[compressionQuality]}
+                    onValueChange={handleQualityChange}
+                    className="w-full"
+                    aria-label={`Compression quality ${Math.round(compressionQuality * 100)}%`}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Lower values mean smaller files but lower quality. Higher values mean better quality but larger files. Manually adjusting this sets Preset to Custom.
+                  </p>
                 </div>
-                <Slider
-                  id="qualitySlider"
-                  min={0.1}
-                  max={1.0}
-                  step={0.01} 
-                  value={[compressionQuality]}
-                  onValueChange={handleQualityChange}
-                  className="w-full"
-                  aria-label={`Compression quality ${Math.round(compressionQuality * 100)}%`}
-                />
-                <p className="text-xs text-muted-foreground">
-                  Lower values mean smaller files but lower quality. Higher values mean better quality but larger files. Adjusted by presets or manually (sets preset to Custom).
-                </p>
-              </div>
+              )}
               
               <div className="space-y-2">
                 <Label className="text-base font-medium text-foreground/90">Advanced Options</Label>
@@ -393,7 +395,6 @@ export default function JPEGifyAppPage() {
           )}
         </div>
       </main>
-      {/* Footer removed as it's now in RootLayout */}
     </div>
   );
 }
