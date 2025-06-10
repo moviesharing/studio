@@ -13,6 +13,9 @@ interface AdSenseAdUnitProps {
   adLayoutKey?: string; // For in-article ads, etc.
 }
 
+const PLACEHOLDER_AD_CLIENT = "ca-pub-0000000000000000";
+const PLACEHOLDER_AD_SLOT = "0000000000";
+
 const AdSenseAdUnit: React.FC<AdSenseAdUnitProps> = ({
   adClient,
   adSlot,
@@ -32,20 +35,50 @@ const AdSenseAdUnit: React.FC<AdSenseAdUnitProps> = ({
     }
   }, [adSlot, adClient, adFormat]); // Re-run if critical ad parameters change
 
-  // Ensure adClient and adSlot are provided
-  if (!adClient || !adSlot) {
-    console.warn("AdSenseAdUnit: adClient and adSlot props are required.");
-    return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f0f0f0', color: '#777', padding: '20px', border: '1px dashed #ccc', borderRadius: '8px' }}>Ad unit requires adClient and adSlot.</div>;
+  const isUsingPlaceholderClient = adClient === PLACEHOLDER_AD_CLIENT;
+  const isUsingPlaceholderSlot = adSlot === PLACEHOLDER_AD_SLOT;
+
+  if (!adClient || !adSlot || isUsingPlaceholderClient || isUsingPlaceholderSlot) {
+    let message = "AdSense Ad Unit Error:";
+    if (!adClient || isUsingPlaceholderClient) {
+      message += " 'adClient' prop is missing or is a placeholder. Please provide your actual AdSense Publisher ID.";
+    }
+    if (!adSlot || isUsingPlaceholderSlot) {
+      message += " 'adSlot' prop is missing or is a placeholder. Please provide your actual Ad Slot ID.";
+    }
+    console.warn("AdSenseAdUnit:", message);
+    return (
+      <div 
+        style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center', 
+          background: '#fff0f0', 
+          color: '#a00', 
+          padding: '20px', 
+          border: '2px dashed #d00', 
+          borderRadius: '8px',
+          textAlign: 'center',
+          margin: '20px 0',
+          fontSize: '14px',
+          lineHeight: '1.5'
+        }}
+        className="adsense-warning-placeholder"
+      >
+        {message}
+        <br />
+        Also, ensure you've updated the AdSense Publisher ID in the script tag in `src/app/layout.tsx`.
+      </div>
+    );
   }
   
-  // Check if running in a development environment where ads might not load
   const isDev = process.env.NODE_ENV === 'development';
 
   return (
     <div style={{ textAlign: 'center', margin: '20px 0' }} className="adsense-ad-unit-wrapper">
       {isDev && (
         <div style={{padding: '10px', background: '#f0f0f0', color: '#333', fontSize: '12px', border: '1px dashed #ccc', borderRadius: '4px', marginBottom: '5px'}}>
-          AdSense Ad Slot ({adSlot}) - Ads may not show in DEV or if account is not approved/configured.
+          AdSense Ad Slot ({adSlot}) - Ads may not show in DEV or if account is not approved/configured. This message is for DEV environment.
         </div>
       )}
       <ins
