@@ -95,7 +95,7 @@ export function ImageUploader({ onFilesAdded }: ImageUploaderProps) {
           {isDragging ? "Drop JPEGs here" : "Drag & Drop JPEGs"}
         </CardTitle>
         <CardDescription>
-          or click to browse files. Max 10 files, 5MB each.
+          or click to browse files. Max 10 files, 10MB each.
         </CardDescription>
       </CardHeader>
       <CardContent className="text-center">

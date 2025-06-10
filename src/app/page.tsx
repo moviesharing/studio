@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback } from "react";
 import type { ImageFile } from "@/types";
 import { ImageUploader } from "@/components/image-uploader";
 import { ImagePreviewCard } from "@/components/image-preview-card";
@@ -9,6 +9,10 @@ import { Button } from "@/components/ui/button";
 import { Archive, Info } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import imageCompression from 'browser-image-compression';
+
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_FILES = 10;
 
 export default function HomePage() {
   const [imageFiles, setImageFiles] = useState<ImageFile[]>([]);
@@ -20,98 +24,111 @@ export default function HomePage() {
     );
   }, []);
 
-  const simulateCompression = useCallback((fileToProcess: ImageFile) => {
-    // Simulate uploading
-    setTimeout(() => {
-      updateImageFile(fileToProcess.id, { status: "uploading" });
-    }, 100);
-
-    // Simulate compressing
-    setTimeout(() => {
+  const compressAndProcessImage = useCallback(
+    async (fileToProcess: ImageFile) => {
       updateImageFile(fileToProcess.id, { status: "compressing", progress: 0 });
-      let currentProgress = 0;
-      const interval = setInterval(() => {
-        currentProgress += Math.floor(Math.random() * 10) + 5; // Random progress
-        if (currentProgress >= 100) {
-          clearInterval(interval);
-          updateImageFile(fileToProcess.id, {
-            status: "compressed",
-            progress: 100,
-            compressedSize: Math.floor(fileToProcess.originalSize * (Math.random() * 0.4 + 0.3)), // Compress to 30-70%
-          });
-          toast({
-            title: "Compression Complete",
-            description: `${fileToProcess.file.name} has been compressed.`,
-          });
-        } else {
-          updateImageFile(fileToProcess.id, { progress: currentProgress });
-        }
-      }, 200 + Math.random() * 300); // Random interval
-    }, 1000 + Math.random() * 500); // Random start time for compression
-  }, [updateImageFile, toast]);
 
-  const handleFilesAdded = useCallback((files: File[]) => {
-      const newImageFiles: ImageFile[] = files.map((file) => ({
-        id: `${file.name}-${Date.now()}-${Math.random()}`,
-        file,
-        previewUrl: URL.createObjectURL(file),
-        status: "pending",
-        progress: 0,
-        originalSize: file.size,
-      }));
-      
-      const updatedFiles = [...imageFiles, ...newImageFiles];
-      // Basic check for too many files (example limit)
-      if (updatedFiles.length > 10) {
+      try {
+        const options = {
+          maxSizeMB: 2, // Aim for files under 2MB
+          maxWidthOrHeight: 1920, // Resize if larger than 1920px on either dimension
+          useWebWorker: true,
+          initialQuality: 0.7, // JPEG quality (0 to 1)
+          alwaysKeepResolution: false, // Allow resolution change if needed
+          onProgress: (p: number) => {
+            updateImageFile(fileToProcess.id, { progress: p });
+          },
+          fileType: 'image/jpeg', // Ensure output is JPEG
+        };
+
+        const compressedBlob = await imageCompression(fileToProcess.file, options);
+        
+        const compressedFile = new File([compressedBlob], `jpegify_${fileToProcess.file.name}`, {
+          type: compressedBlob.type,
+          lastModified: Date.now(),
+        });
+
+        updateImageFile(fileToProcess.id, {
+          status: "compressed",
+          progress: 100,
+          compressedSize: compressedFile.size,
+          compressedFile: compressedFile,
+        });
+
         toast({
-          title: "Too many files",
-          description: "You can upload a maximum of 10 files at a time.",
+          title: "Compression Complete",
+          description: `${fileToProcess.file.name} has been compressed.`,
+        });
+
+      } catch (error) {
+        console.error("Compression error:", error);
+        const errorMessage = error instanceof Error ? error.message : "Unknown compression error";
+        updateImageFile(fileToProcess.id, {
+          status: "error",
+          error: errorMessage,
+          progress: 0,
+        });
+        toast({
+          title: "Compression Failed",
+          description: `${fileToProcess.file.name}: ${errorMessage}`,
           variant: "destructive",
         });
-        // Only add up to the limit
-        const filesToAdd = newImageFiles.slice(0, 10 - imageFiles.length);
-        setImageFiles(prev => [...prev, ...filesToAdd]);
-        filesToAdd.forEach(simulateCompression);
+      }
+    },
+    [updateImageFile, toast]
+  );
+
+  const handleFilesAdded = useCallback(
+    (files: File[]) => {
+      const newImageFiles: ImageFile[] = files
+        .filter(file => {
+          if (file.size > MAX_FILE_SIZE) {
+            toast({
+              title: "File too large",
+              description: `${file.name} is larger than ${MAX_FILE_SIZE / (1024*1024)}MB and will not be processed.`,
+              variant: "destructive",
+            });
+            return false;
+          }
+          return true;
+        })
+        .map((file) => ({
+          id: `${file.name}-${Date.now()}-${Math.random()}`,
+          file,
+          previewUrl: URL.createObjectURL(file),
+          status: "pending",
+          progress: 0,
+          originalSize: file.size,
+        }));
+
+      if (imageFiles.length + newImageFiles.length > MAX_FILES) {
+        toast({
+          title: "Too many files",
+          description: `You can upload a maximum of ${MAX_FILES} files at a time. Only the first ${MAX_FILES - imageFiles.length} files will be added.`,
+          variant: "destructive",
+        });
+        const filesToActuallyAdd = newImageFiles.slice(0, MAX_FILES - imageFiles.length);
+        setImageFiles((prev) => [...prev, ...filesToActuallyAdd]);
+        filesToActuallyAdd.forEach(compressAndProcessImage);
         return;
       }
       
-      // Basic check for file size (example limit 5MB)
-      const largeFiles = newImageFiles.filter(f => f.originalSize > 5 * 1024 * 1024);
-      if (largeFiles.length > 0) {
-        largeFiles.forEach(f => {
-          toast({
-            title: "File too large",
-            description: `${f.file.name} is larger than 5MB and will not be processed.`,
-            variant: "destructive",
-          });
-        });
-        const filesToProcess = newImageFiles.filter(f => f.originalSize <= 5 * 1024 * 1024);
-        setImageFiles(prev => [...prev, ...filesToProcess]);
-        filesToProcess.forEach(simulateCompression);
-        return;
-      }
-
-      setImageFiles(prev => [...prev, ...newImageFiles]);
-      newImageFiles.forEach(simulateCompression);
+      setImageFiles((prev) => [...prev, ...newImageFiles]);
+      newImageFiles.forEach(compressAndProcessImage);
     },
-    [simulateCompression, toast, imageFiles]
+    [compressAndProcessImage, toast, imageFiles.length]
   );
 
   const handleBatchDownload = () => {
     toast({
-      title: "Batch Download",
-      description: "Simulating ZIP download of all compressed images. This feature is for demonstration.",
+      title: "Batch Download (Demo)",
+      description: "Simulating ZIP download of all compressed images. This feature is for demonstration purposes.",
     });
     // Actual ZIP creation would require a library like JSZip and more complex logic
   };
-
-  const isCompressingAny = imageFiles.some(
-    (f) => f.status === "compressing" || f.status === "uploading" || f.status === "pending"
-  );
   
-  const allCompressed = imageFiles.length > 0 && imageFiles.every(f => f.status === 'compressed' || f.status === 'error');
-
-  // Removed the useEffect for imageFiles cleanup as ImagePreviewCard now handles its own URL revocation.
+  const allProcessed = imageFiles.length > 0 && imageFiles.every(f => f.status === 'compressed' || f.status === 'error');
+  const anyCompressedSuccessfully = imageFiles.some(f => f.status === 'compressed');
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground">
@@ -120,7 +137,7 @@ export default function HomePage() {
           <header className="text-center space-y-2">
             <h1 className="text-5xl font-bold font-headline text-primary sm:text-6xl">JPEGify</h1>
             <p className="text-lg text-muted-foreground sm:text-xl">
-              Drag & drop your JPEGs to compress them instantly.
+              Drag & drop your JPEGs to compress them instantly in your browser.
             </p>
           </header>
 
@@ -128,9 +145,9 @@ export default function HomePage() {
           
           <Alert variant="default" className="bg-accent/50 border-primary/30">
             <Info className="h-5 w-5 text-primary" />
-            <AlertTitle className="font-semibold text-primary/90">Demonstration Purpose</AlertTitle>
+            <AlertTitle className="font-semibold text-primary/90">In-Browser Compression</AlertTitle>
             <AlertDescription className="text-primary/80">
-              This app simulates image compression. Uploaded images are not actually sent to a server or modified. Downloaded files will be the originals.
+              JPEGify compresses images directly in your browser. Your files are not uploaded to any server. The batch download (ZIP) feature is currently a demonstration.
             </AlertDescription>
           </Alert>
 
@@ -140,11 +157,11 @@ export default function HomePage() {
                 <h2 className="text-3xl font-semibold font-headline">Your Images</h2>
                 <Button 
                   onClick={handleBatchDownload} 
-                  disabled={!allCompressed || imageFiles.filter(f => f.status === 'compressed').length === 0}
+                  disabled={!allProcessed || !anyCompressedSuccessfully}
                   size="lg"
                 >
                   <Archive className="mr-2 h-5 w-5" />
-                  Download All (ZIP)
+                  Download All (ZIP Demo)
                 </Button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -157,7 +174,7 @@ export default function HomePage() {
         </div>
       </main>
       <footer className="py-6 text-center text-sm text-muted-foreground border-t">
-        JPEGify &copy; {new Date().getFullYear()}. Built with Next.js & ShadCN UI.
+        JPEGify &copy; {new Date().getFullYear()}. Built with Next.js, ShadCN UI & Browser Image Compression.
       </footer>
     </div>
   );

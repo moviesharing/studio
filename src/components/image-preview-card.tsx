@@ -7,36 +7,42 @@ import Image from "next/image";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Download, Loader2, CheckCircle2, XCircle, FileImage } from "lucide-react";
+import { Download, Loader2, CheckCircle2, XCircle, FileImage, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ImagePreviewCardProps {
   imageFile: ImageFile;
 }
 
-export function ImagePreviewCard({ imageFile }: ImagePreviewCardProps) {
+function ImagePreviewCardComponent({ imageFile }: ImagePreviewCardProps) {
   
   useEffect(() => {
-    // Clean up object URL only when component unmounts
     const currentPreviewUrl = imageFile.previewUrl;
     return () => {
       if (currentPreviewUrl) {
-        URL.revokeObjectURL(currentPreviewUrl);
+         URL.revokeObjectURL(currentPreviewUrl);
       }
     };
-  }, []); // Empty dependency array ensures cleanup only on unmount
+  }, [imageFile.previewUrl]); // Depend on previewUrl to ensure it's cleaned up if it changes, though it shouldn't for a given card.
 
   const handleDownload = () => {
-    const link = document.createElement('a');
-    link.href = imageFile.previewUrl; // For mock, download original/preview
-    link.download = `compressed_${imageFile.file.name}`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    if (imageFile.status === 'compressed' && imageFile.compressedFile) {
+      const url = URL.createObjectURL(imageFile.compressedFile);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = imageFile.compressedFile.name;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url); // Clean up the object URL after download starts
+    } else {
+      // This case should ideally not be reached if button is properly disabled
+      console.warn("Download attempted on a non-compressed or missing file.");
+    }
   };
 
-  const formatBytes = (bytes: number, decimals = 2) => {
-    if (bytes === 0) return '0 Bytes';
+  const formatBytes = (bytes?: number, decimals = 2) => {
+    if (bytes === undefined || bytes === null || bytes === 0) return '0 Bytes';
     const k = 1024;
     const dm = decimals < 0 ? 0 : decimals;
     const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
@@ -44,8 +50,16 @@ export function ImagePreviewCard({ imageFile }: ImagePreviewCardProps) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
   };
 
+  const getSavePercentage = () => {
+    if (imageFile.status === 'compressed' && imageFile.compressedSize && imageFile.originalSize > 0) {
+      const saved = ((imageFile.originalSize - imageFile.compressedSize) / imageFile.originalSize) * 100;
+      return saved > 0 ? `${saved.toFixed(1)}% saved` : 'No significant saving';
+    }
+    return null;
+  }
+
   return (
-    <Card className="overflow-hidden shadow-lg flex flex-col">
+    <Card className="overflow-hidden shadow-lg flex flex-col bg-card">
       <CardHeader className="p-0 relative aspect-video">
         {imageFile.previewUrl ? (
           <Image
@@ -63,23 +77,29 @@ export function ImagePreviewCard({ imageFile }: ImagePreviewCardProps) {
         )}
       </CardHeader>
       <CardContent className="p-4 flex-grow">
-        <CardTitle className="text-base font-medium truncate mb-1" title={imageFile.file.name}>
+        <CardTitle className="text-base font-semibold truncate mb-1" title={imageFile.file.name}>
           {imageFile.file.name}
         </CardTitle>
-        <p className="text-xs text-muted-foreground mb-3">
+        <p className="text-xs text-muted-foreground mb-1">
           Original: {formatBytes(imageFile.originalSize)}
         </p>
+        {imageFile.status === 'compressed' && imageFile.compressedSize !== undefined && (
+          <p className="text-xs text-green-600 font-medium mb-3">
+            Compressed: {formatBytes(imageFile.compressedSize)} ({getSavePercentage()})
+          </p>
+        )}
+
 
         {imageFile.status === 'pending' && (
           <div className="flex items-center text-sm text-muted-foreground">
             <Loader2 className="mr-2 h-4 w-4 animate-spin text-primary" />
-            Waiting to process...
+            Queued...
           </div>
         )}
-        {imageFile.status === 'uploading' && (
+        {imageFile.status === 'uploading' && ( // This status might be very brief or skipped with local compression
           <div className="flex items-center text-sm text-primary">
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Uploading...
+            Preparing...
           </div>
         )}
         {imageFile.status === 'compressing' && (
@@ -88,32 +108,31 @@ export function ImagePreviewCard({ imageFile }: ImagePreviewCardProps) {
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Compressing... {imageFile.progress}%
             </div>
-            <Progress value={imageFile.progress} className="w-full h-2" />
+            <Progress value={imageFile.progress} className="w-full h-2 bg-primary/20" />
           </div>
         )}
         {imageFile.status === 'compressed' && (
           <div className="text-sm text-green-600">
-            <div className="flex items-center mb-1">
+            <div className="flex items-center">
               <CheckCircle2 className="mr-2 h-5 w-5" />
-              Compressed!
+              Compression Successful!
             </div>
-            <p className="text-xs text-muted-foreground">
-              New size: {imageFile.compressedSize ? formatBytes(imageFile.compressedSize) : 'N/A'}
-            </p>
           </div>
         )}
         {imageFile.status === 'error' && (
-          <div className="flex items-center text-sm text-destructive">
-            <XCircle className="mr-2 h-5 w-5" />
-            Error: {imageFile.error || 'Compression failed'}
+          <div className="flex items-start text-sm text-destructive">
+            <AlertTriangle className="mr-2 h-5 w-5 flex-shrink-0" />
+            <div>
+             <span className="font-semibold">Error:</span> {imageFile.error || 'Compression failed'}
+            </div>
           </div>
         )}
       </CardContent>
-      <CardFooter className="p-4 bg-muted/50">
+      <CardFooter className="p-4 bg-muted/30 border-t">
         {imageFile.status === 'compressed' ? (
           <Button onClick={handleDownload} className="w-full" variant="default">
             <Download className="mr-2 h-4 w-4" />
-            Download
+            Download Compressed
           </Button>
         ) : (
           <Button className="w-full" variant="outline" disabled>
@@ -125,3 +144,5 @@ export function ImagePreviewCard({ imageFile }: ImagePreviewCardProps) {
     </Card>
   );
 }
+
+export const ImagePreviewCard = React.memo(ImagePreviewCardComponent);
