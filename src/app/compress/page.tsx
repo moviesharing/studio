@@ -17,6 +17,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import AdSenseAdUnit from "@/components/adsense-ad-unit";
+import Link from "next/link";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const MAX_FILES = 10;
@@ -87,15 +88,11 @@ export default function JPEGifyAppPage() {
           fileType: 'image/jpeg',
         };
         
-        // Apply removeMetadata option. browser-image-compression strips most metadata by default,
-        // but this respects the user's choice if the library offers finer control in the future.
-        // Currently, the library does not have a direct 'removeMetadata' boolean option.
-        // The primary way it handles metadata is by not retaining much of it during re-encoding.
-        // We'll log the choice for now.
         if (removeMetadata) {
-          // console.log(`Attempting to compress ${fileToProcess.file.name} with metadata removal preferred.`);
-        } else {
-          // console.log(`Attempting to compress ${fileToProcess.file.name} with metadata retention preferred (if possible).`);
+          // browser-image-compression generally strips most metadata by default.
+          // There isn't a direct 'removeMetadata: false' option to *force* keeping it
+          // if the library's default behavior is to remove it during re-encoding.
+          // This flag represents user intent.
         }
 
 
@@ -262,7 +259,7 @@ export default function JPEGifyAppPage() {
           <header className="text-center space-y-2">
             <h1 className="text-5xl font-bold font-headline text-primary sm:text-6xl">Compress JPEGs</h1>
             <p className="text-lg text-muted-foreground sm:text-xl">
-              Drag & drop your JPEGs to compress them instantly in your browser with fine-tuned settings.
+              Drag &amp; drop your JPEGs to compress them instantly in your browser with fine-tuned settings.
             </p>
           </header>
 
@@ -397,8 +394,15 @@ export default function JPEGifyAppPage() {
           )}
         </div>
       </main>
-      <footer className="py-6 text-center text-sm text-muted-foreground border-t">
-        JPEGify &copy; {new Date().getFullYear()}.
+      <footer className="py-8 text-center text-sm text-muted-foreground border-t">
+        <div className="container mx-auto px-4 flex flex-col sm:flex-row justify-center items-center gap-x-6 gap-y-2">
+          <span>JPEGify &amp;copy; {new Date().getFullYear()}.</span>
+          <nav className="flex gap-x-4 gap-y-2 flex-wrap justify-center">
+            <Link href="/privacy-policy" className="hover:text-primary hover:underline">Privacy Policy</Link>
+            <Link href="/terms-conditions" className="hover:text-primary hover:underline">Terms &amp; Conditions</Link>
+            <Link href="/contact" className="hover:text-primary hover:underline">Contact</Link>
+          </nav>
+        </div>
       </footer>
     </div>
   );

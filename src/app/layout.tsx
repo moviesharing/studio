@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { SiteHeader } from "@/components/site-header";
 import Script from 'next/script';
+import { CookieConsentPopup } from "@/components/cookie-consent-popup";
 
 export const metadata: Metadata = {
   title: "JPEGify - Smart Image Compression",
@@ -28,7 +29,7 @@ export default function RootLayout({
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-0000000000000000" // IMPORTANT: Replace ca-pub-0000000000000000 with your actual AdSense Publisher ID
           crossOrigin="anonymous"
-          strategy="afterInteractive"
+          strategy="afterInteractive" // Consider 'beforeInteractive' if consent influences loading
         />
       </head>
       <body className="font-body antialiased">
@@ -37,6 +38,7 @@ export default function RootLayout({
           <div className="flex-1">{children}</div>
         </div>
         <Toaster />
+        <CookieConsentPopup />
       </body>
     </html>
   );
