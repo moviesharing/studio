@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { Image as ImageIcon, ArrowRight, CheckCircle } from "lucide-react";
 import AAdsUnit from "@/components/a-ads-unit";
+import { ShareButton } from "@/components/share-button"; // Added import
 
 export function LandingPageContent() {
   const router = useRouter();
@@ -33,6 +34,11 @@ export function LandingPageContent() {
           >
             Start Compressing <ArrowRight className="ml-2 h-6 w-6" />
           </Button>
+        </div>
+
+        {/* Added ShareButton */}
+        <div className="mt-6">
+          <ShareButton />
         </div>
 
         <div className="my-8 w-full max-w-2xl">
