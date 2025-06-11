@@ -101,11 +101,6 @@ export default function AboutPage() {
                 Compress Your Images Now <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
-             <Button asChild variant="outline" size="lg" className="w-full sm:w-auto">
-              <a href="https://github.com/jphabs/jpegify" target="_blank" rel="noopener noreferrer">
-                View on GitHub <ExternalLink className="ml-2 h-5 w-5" />
-              </a>
-            </Button>
           </div>
         </CardContent>
       </Card>
