@@ -90,7 +90,7 @@ export default function AboutPage() {
             JPEGify was lovingly created and is diligently maintained by <strong className="font-semibold text-primary/90">Jphabs Khalifa</strong>.
           </p>
           <p>
-            As a passionate web developer and advocate for user-centric tools, Jphabs built JPEGify with the primary goal of providing a simple, private, and highly efficient solution for a common digital need. The focus is always on crafting useful applications that respect user privacy and offer a seamless, enjoyable experience.
+            With a unique approach to software creation best described as &quot;Vibe Coding,&quot; Jphabs relies on intuition and a deep understanding of user needs to bring projects like JPEGify to life. This philosophy guided the development of JPEGify, aiming to provide a simple, private, and highly efficient solution for a common digital need. The focus is always on crafting useful applications that respect user privacy and offer a seamless, enjoyable experience.
           </p>
            <p>
             Thank you for choosing JPEGify! We genuinely hope you find it useful. If it helps you, please consider sharing it with others who might benefit.
