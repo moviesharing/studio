@@ -3,7 +3,6 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { SiteHeader } from "@/components/site-header";
-// Script import for AdSense is removed
 import { CookieConsentPopup } from "@/components/cookie-consent-popup";
 import { SiteFooter } from "@/components/site-footer";
 
@@ -13,6 +12,9 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: "JPEGify - Smart Image Compression",
   description: "Compress JPEGs efficiently with JPEGify. Secure, client-side image optimization.",
+  icons: {
+    icon: "/favicon.ico", // Standard path for favicon in the app directory
+  },
   openGraph: {
     title: "JPEGify - Smart Image Compression",
     description: "Instantly compress JPEGs in your browser. Secure, private, and easy to use.",
@@ -20,7 +22,7 @@ export const metadata: Metadata = {
     siteName: "JPEGify",
     images: [
       {
-        url: `${siteUrl}og-image.png`, // Ensure leading slash is handled by siteUrl or add here
+        url: `${siteUrl}og-image.png`, 
         width: 1200,
         height: 630,
         alt: "JPEGify - Smart Image Compression",
@@ -50,7 +52,6 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
           rel="stylesheet"
         />
-        {/* Google AdSense Script tag removed */}
       </head>
       <body className="font-body antialiased">
         <div className="relative flex min-h-screen flex-col bg-background">
