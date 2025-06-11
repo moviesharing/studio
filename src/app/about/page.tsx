@@ -87,13 +87,16 @@ export default function AboutPage() {
         </CardHeader>
         <CardContent className="space-y-4 text-card-foreground pt-6 font-body">
           <p>
-            JPEGify was lovingly created and is diligently maintained by <strong className="font-semibold text-primary/90">Jphabs Khalifa</strong>.
+            Hi there! I&apos;m <strong className="font-semibold text-primary/90">Jphabs Khalifa</strong>, the person behind JPEGify.
           </p>
           <p>
-            With a unique approach to software creation best described as &quot;Vibe Coding,&quot; Jphabs relies on intuition and a deep understanding of user needs to bring projects like JPEGify to life. This philosophy guided the development of JPEGify, aiming to provide a simple, private, and highly efficient solution for a common digital need. The focus is always on crafting useful applications that respect user privacy and offer a seamless, enjoyable experience.
+            I wouldn&apos;t call myself a code expert or anything like that. My way of creating things is what I like to call <strong className="font-semibold text-primary/90">&quot;Vibe Coding.&quot;</strong> It&apos;s all about intuition, feeling out what works, and aiming to build something genuinely useful and simple for people. I just love bringing ideas to life and then sharing them with the world, hoping they help someone out!
+          </p>
+          <p>
+            JPEGify came from that same place – wanting to create a straightforward, private, and efficient tool for a common need. My focus is always on making apps that are a pleasure to use and respect your privacy.
           </p>
            <p>
-            Thank you for choosing JPEGify! We genuinely hope you find it useful. If it helps you, please consider sharing it with others who might benefit.
+            Thank you for choosing JPEGify! I really hope you find it useful. If it helps you, please consider sharing it with others who might benefit.
           </p>
           <div className="pt-4 flex flex-col sm:flex-row gap-4">
             <Button asChild size="lg" className="w-full sm:w-auto shadow-md hover:shadow-lg transition-shadow">
