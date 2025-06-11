@@ -6,7 +6,7 @@ import type { ImageFile } from "@/types";
 import { ImageUploader } from "@/components/image-uploader";
 import { ImagePreviewCard } from "@/components/image-preview-card";
 import { Button } from "@/components/ui/button";
-import { Archive, Info, Loader2, Play } from "lucide-react";
+import { Archive, Info, Loader2, Play, Settings2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import imageCompression from 'browser-image-compression';
@@ -74,7 +74,6 @@ export function CompressPageContent() {
 
   const doCompressImage = useCallback(
     async (fileToProcess: ImageFile) => {
-      // Ensure status is 'compressing' when starting
       updateImageFile(fileToProcess.id, { status: "compressing", progress: 0 });
 
       try {
@@ -91,7 +90,6 @@ export function CompressPageContent() {
         if (removeMetadata) {
           // browser-image-compression generally strips most metadata by default.
         }
-
 
         if (targetResolution === "original") {
           options.alwaysKeepResolution = true;
@@ -117,6 +115,7 @@ export function CompressPageContent() {
         toast({
           title: "Compression Complete",
           description: `${fileToProcess.file.name} has been compressed.`,
+          variant: "default",
         });
 
       } catch (error) {
@@ -139,7 +138,6 @@ export function CompressPageContent() {
     [updateImageFile, toast, compressionQuality, targetResolution, removeMetadata]
   );
 
-  // Effect to process 'queued' images
   useEffect(() => {
     const filesToProcess = imageFiles.filter(f => f.status === 'queued');
     let slotsToFill = MAX_CONCURRENT_COMPRESSIONS - activeCompressions;
@@ -151,12 +149,10 @@ export function CompressPageContent() {
     if (filesToStartNow.length > 0) {
       setActiveCompressions(prev => prev + filesToStartNow.length);
       filesToStartNow.forEach(file => {
-        // updateImageFile(file.id, { status: 'compressing', progress: 0 }); // Redundant: doCompressImage does this
-        // Call doCompressImage directly, it will set the status to 'compressing'
-        setTimeout(() => doCompressImage(file), 0); // setTimeout to allow state update batching
+        setTimeout(() => doCompressImage(file), 0); 
       });
     }
-  }, [imageFiles, activeCompressions, doCompressImage, updateImageFile]);
+  }, [imageFiles, activeCompressions, doCompressImage]);
 
 
   const handleFilesAdded = useCallback(
@@ -176,7 +172,7 @@ export function CompressPageContent() {
         .map((file) => ({
           id: `${file.name}-${Date.now()}-${Math.random()}`,
           file,
-          status: "pending", // Images start as 'pending' user action
+          status: "pending", 
           progress: 0,
           originalSize: file.size,
         }));
@@ -207,7 +203,6 @@ export function CompressPageContent() {
       return;
     }
 
-    // Mark all 'pending' files as 'queued' so the useEffect can pick them up.
     setImageFiles(prevFiles =>
       prevFiles.map(file =>
         file.status === 'pending' ? { ...file, status: 'queued' } : file
@@ -216,6 +211,7 @@ export function CompressPageContent() {
     toast({
         title: "Compression Queued",
         description: `${filesToActuallyQueue.length} image(s) added to the compression queue.`,
+        variant: "default",
     });
   };
 
@@ -228,7 +224,6 @@ export function CompressPageContent() {
       toast({
         title: "No Compressed Images",
         description: "There are no successfully compressed images to download.",
-        variant: "default",
       });
       return;
     }
@@ -258,6 +253,7 @@ export function CompressPageContent() {
       toast({
         title: "Download Started",
         description: "Your ZIP file should begin downloading shortly.",
+        variant: "default",
       });
     } catch (error) {
       console.error("Error creating ZIP file:", error);
@@ -278,54 +274,57 @@ export function CompressPageContent() {
 
   return (
     <div className="flex flex-col min-h-[calc(100vh-4rem)] text-foreground">
-      <main className="flex-grow container mx-auto px-4 py-8 sm:px-6 lg:px-8">
+      <main className="flex-grow container mx-auto px-4 py-12 sm:px-6 lg:px-8">
         <div className="w-full max-w-5xl mx-auto space-y-10">
-          <header className="text-center space-y-2">
-            <h1 className="text-5xl font-bold font-headline text-primary sm:text-6xl">Compress JPEGs</h1>
-            <p className="text-lg text-muted-foreground sm:text-xl">
-              Drag &amp; drop your JPEGs, adjust settings, and compress them instantly in your browser.
+          <header className="text-center space-y-3">
+            <h1 className="text-5xl font-bold font-headline text-primary sm:text-6xl md:text-7xl">Compress JPEGs</h1>
+            <p className="text-lg text-muted-foreground sm:text-xl font-body">
+              Drag &amp; drop your JPEGs, adjust settings, and compress them instantly—right in your browser.
             </p>
           </header>
 
           <ImageUploader onFilesAdded={handleFilesAdded} />
 
           {anyCompressedSuccessfully && (
-            <div className="my-6">
+            <div className="my-8">
               <AAdsUnit adUnitId="2398113" />
             </div>
           )}
 
-          <Card className="bg-card shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-2xl font-semibold">Compression Settings</CardTitle>
-              <CardDescription>
-                Adjust the desired quality, resolution, and other options. Settings apply when you start compression.
+          <Card className="bg-card shadow-xl rounded-xl">
+            <CardHeader className="border-b">
+              <div className="flex items-center gap-3">
+                <Settings2 className="h-7 w-7 text-primary" />
+                <CardTitle className="text-2xl font-semibold font-headline text-card-foreground">Compression Settings</CardTitle>
+              </div>
+              <CardDescription className="font-body pt-1">
+                Adjust quality, resolution, and other options. Settings apply when you start new compressions.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
+            <CardContent className="space-y-8 pt-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-8 items-end">
                 <div className="space-y-2">
                   <Label htmlFor="presetSelector" className="text-base font-medium text-foreground/90">
-                    Preset
+                    Compression Preset
                   </Label>
                   <Select value={selectedPreset} onValueChange={(value: PresetValue) => setSelectedPreset(value)}>
-                    <SelectTrigger id="presetSelector" className="w-full">
+                    <SelectTrigger id="presetSelector" className="w-full text-base py-3">
                       <SelectValue placeholder="Select a preset" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="balanced">Balanced (Good quality, good compression)</SelectItem>
                       <SelectItem value="max_compression">Max Compression (Smallest size)</SelectItem>
                       <SelectItem value="high_quality">High Quality (Best quality, larger size)</SelectItem>
-                      <SelectItem value="custom">Custom</SelectItem>
+                      <SelectItem value="custom">Custom Settings</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                  <div className="space-y-2">
                   <Label htmlFor="resolutionSelector" className="text-base font-medium text-foreground/90">
-                    Target Resolution (longest edge)
+                    Target Resolution <span className="text-xs text-muted-foreground">(longest edge)</span>
                   </Label>
                   <Select value={targetResolution} onValueChange={handleResolutionChange}>
-                    <SelectTrigger id="resolutionSelector" className="w-full">
+                    <SelectTrigger id="resolutionSelector" className="w-full text-base py-3">
                       <SelectValue placeholder="Select target resolution" />
                     </SelectTrigger>
                     <SelectContent>
@@ -339,12 +338,12 @@ export function CompressPageContent() {
               </div>
 
               {selectedPreset === "custom" && (
-                <div className="space-y-3 pt-4 border-t border-border">
+                <div className="space-y-4 pt-6 border-t border-border">
                    <div className="flex justify-between items-center">
                     <Label htmlFor="qualitySlider" className="text-base font-medium text-foreground/90">
                       JPEG Quality
                     </Label>
-                    <span className="text-sm font-semibold text-primary tabular-nums">
+                    <span className="text-lg font-semibold text-primary tabular-nums">
                       {Math.round(compressionQuality * 100)}%
                     </span>
                   </div>
@@ -355,52 +354,53 @@ export function CompressPageContent() {
                     step={0.01}
                     value={[compressionQuality]}
                     onValueChange={handleQualityChange}
-                    className="w-full"
+                    className="w-full [&>span:last-child]:h-6 [&>span:last-child]:w-6"
                     aria-label={`Compression quality ${Math.round(compressionQuality * 100)}%`}
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Lower values mean smaller files but lower quality. Higher values mean better quality but larger files. Manually adjusting this sets Preset to Custom.
+                  <p className="text-sm text-muted-foreground font-body">
+                    Adjust for file size vs. image quality. Modifying this enables "Custom Settings".
                   </p>
                 </div>
               )}
 
-              <div className="space-y-2">
+              <div className="space-y-3 pt-6 border-t border-border">
                 <Label className="text-base font-medium text-foreground/90">Advanced Options</Label>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-3 p-3 bg-muted/30 rounded-md">
                   <Checkbox
                     id="removeMetadata"
                     checked={removeMetadata}
                     onCheckedChange={(checked) => setRemoveMetadata(checked as boolean)}
+                    className="h-5 w-5"
                   />
-                  <Label htmlFor="removeMetadata" className="text-sm font-normal text-foreground/80 cursor-pointer">
+                  <Label htmlFor="removeMetadata" className="text-sm font-normal text-foreground/80 cursor-pointer font-body">
                     Attempt to remove image metadata (e.g., EXIF data)
                   </Label>
                 </div>
-                 <p className="text-xs text-muted-foreground pl-6">
-                  Helps reduce file size further. Most metadata is removed by default during compression.
+                 <p className="text-xs text-muted-foreground pl-3 font-body">
+                  This can help reduce file size further. Most metadata is typically removed during compression.
                 </p>
               </div>
             </CardContent>
           </Card>
 
-          <Alert variant="default" className="bg-accent/50 border-primary/30">
+          <Alert variant="default" className="bg-accent/50 border-primary/30 rounded-lg">
             <Info className="h-5 w-5 text-primary" />
-            <AlertTitle className="font-semibold text-primary/90">In-Browser Compression</AlertTitle>
-            <AlertDescription className="text-primary/80">
-              JPEGify compresses images directly in your browser. Your files are not uploaded to any server, ensuring privacy.
+            <AlertTitle className="font-semibold text-primary/90 font-headline">Secure In-Browser Compression</AlertTitle>
+            <AlertDescription className="text-primary/80 font-body">
+              JPEGify compresses images directly in your web browser. Your files are never uploaded to any server, ensuring complete privacy and security.
             </AlertDescription>
           </Alert>
 
           {imageFiles.length > 0 && (
-            <section className="space-y-6">
-              <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-                <h2 className="text-3xl font-semibold font-headline">Your Images</h2>
+            <section className="space-y-8">
+              <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-6 border-t">
+                <h2 className="text-3xl font-bold font-headline text-foreground">Your Images</h2>
                 <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
                   <Button
                     onClick={handleCompressAllPending}
                     disabled={!hasPendingFiles || processingInProgress}
                     size="lg"
-                    className="w-full sm:w-auto"
+                    className="w-full sm:w-auto shadow-md hover:shadow-lg transition-shadow"
                   >
                     <Play className="mr-2 h-5 w-5" />
                     Compress Pending ({pendingFileCount})
@@ -433,4 +433,3 @@ export function CompressPageContent() {
     </div>
   );
 }
-

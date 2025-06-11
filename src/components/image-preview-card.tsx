@@ -6,7 +6,8 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Download, Loader2, CheckCircle2, AlertTriangle, FileImage, Clock3 } from "lucide-react";
+import { Download, Loader2, CheckCircle2, AlertTriangle, FileImage, Clock3, ArrowRightLeft } from "lucide-react";
+import { Badge } from "@/components/ui/badge"; // Added for status
 
 interface ImagePreviewCardProps {
   imageFile: ImageFile;
@@ -17,7 +18,7 @@ function ImagePreviewCardComponent({ imageFile }: ImagePreviewCardProps) {
   const [compressedPreviewUrl, setCompressedPreviewUrl] = useState<string | null>(null);
 
   const imageContainerRef = useRef<HTMLDivElement>(null);
-  const [sliderPosition, setSliderPosition] = useState(50); // Percentage
+  const [sliderPosition, setSliderPosition] = useState(50); 
   const isDraggingRef = useRef(false);
 
   useEffect(() => {
@@ -30,7 +31,6 @@ function ImagePreviewCardComponent({ imageFile }: ImagePreviewCardProps) {
     }
     return () => {
       if (objectUrl) URL.revokeObjectURL(objectUrl);
-      if (!imageFile?.file) setInternalPreviewUrl(null);
     };
   }, [imageFile?.file]);
 
@@ -44,7 +44,6 @@ function ImagePreviewCardComponent({ imageFile }: ImagePreviewCardProps) {
     }
     return () => {
       if (objectUrl) URL.revokeObjectURL(objectUrl);
-      if (!imageFile?.compressedFile) setCompressedPreviewUrl(null);
     };
   }, [imageFile?.compressedFile]);
 
@@ -71,21 +70,21 @@ function ImagePreviewCardComponent({ imageFile }: ImagePreviewCardProps) {
   const handleDragEnd = useCallback(() => {
     if (!isDraggingRef.current) return;
     isDraggingRef.current = false;
-    window.removeEventListener('mousemove', handleMouseMove);
-    window.removeEventListener('mouseup', handleDragEnd);
-    window.removeEventListener('touchmove', handleTouchMove);
-    window.removeEventListener('touchend', handleDragEnd);
-    window.removeEventListener('touchcancel', handleDragEnd);
+    document.removeEventListener('mousemove', handleMouseMove);
+    document.removeEventListener('mouseup', handleDragEnd);
+    document.removeEventListener('touchmove', handleTouchMove);
+    document.removeEventListener('touchend', handleDragEnd);
+    document.removeEventListener('touchcancel', handleDragEnd);
   }, [handleMouseMove, handleTouchMove]);
   
   const handleDragStart = useCallback(() => {
     if (!imageContainerRef.current) return;
     isDraggingRef.current = true;
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleDragEnd);
-    window.addEventListener('touchmove', handleTouchMove, { passive: false });
-    window.addEventListener('touchend', handleDragEnd);
-    window.addEventListener('touchcancel', handleDragEnd);
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleDragEnd);
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    document.addEventListener('touchend', handleDragEnd);
+    document.addEventListener('touchcancel', handleDragEnd);
   }, [handleMouseMove, handleDragEnd, handleTouchMove]);
 
   const onMouseDownSlider = (event: React.MouseEvent<HTMLDivElement>) => {
@@ -133,16 +132,27 @@ function ImagePreviewCardComponent({ imageFile }: ImagePreviewCardProps) {
   const getSavePercentage = () => {
     if (imageFile.status === 'compressed' && imageFile.compressedSize && imageFile.originalSize > 0) {
       const saved = ((imageFile.originalSize - imageFile.compressedSize) / imageFile.originalSize) * 100;
-      return saved > 0 ? `${saved.toFixed(1)}% saved` : 'No significant saving';
+      return saved > 0.1 ? `${saved.toFixed(1)}% saved` : (saved < -0.1 ? `${Math.abs(saved).toFixed(1)}% larger` : 'No size change');
     }
     return null;
   }
 
   const showInteractiveSideBySide = imageFile.status === 'compressed' && internalPreviewUrl && compressedPreviewUrl;
 
+  const statusInfo = {
+    pending: { icon: <Clock3 className="h-4 w-4 text-muted-foreground" />, text: "Awaiting Compression", badgeVariant: "outline" as const, textColor: "text-muted-foreground" },
+    queued: { icon: <Loader2 className="h-4 w-4 animate-spin text-blue-500" />, text: "Queued...", badgeVariant: "secondary" as const, textColor: "text-blue-500" },
+    compressing: { icon: <Loader2 className="h-4 w-4 animate-spin text-primary" />, text: `Compressing... ${imageFile.progress}%`, badgeVariant: "secondary" as const, textColor: "text-primary" },
+    compressed: { icon: <CheckCircle2 className="h-4 w-4 text-green-600" />, text: "Compressed!", badgeVariant: "default" as const, textColor: "text-green-600" },
+    error: { icon: <AlertTriangle className="h-4 w-4 text-destructive" />, text: "Error", badgeVariant: "destructive" as const, textColor: "text-destructive" },
+    uploading: { icon: <Loader2 className="h-4 w-4 animate-spin text-primary" />, text: "Preparing...", badgeVariant: "secondary" as const, textColor: "text-primary" },
+  };
+  
+  const currentStatus = statusInfo[imageFile.status];
+
   return (
-    <Card className="overflow-hidden shadow-lg flex flex-col bg-card">
-      <CardHeader className="p-0 relative aspect-video">
+    <Card className="overflow-hidden shadow-lg flex flex-col bg-card rounded-xl hover:shadow-xl transition-shadow duration-300">
+      <CardHeader className="p-0 relative aspect-[4/3] bg-muted/30">
         {showInteractiveSideBySide ? (
           <div ref={imageContainerRef} className="relative w-full h-full select-none overflow-hidden">
             <img
@@ -152,35 +162,35 @@ function ImagePreviewCardComponent({ imageFile }: ImagePreviewCardProps) {
               draggable="false"
             />
             <div
-              className="absolute inset-0 w-full h-full"
+              className="absolute inset-0 w-full h-full overflow-hidden" // Added overflow-hidden
               style={{ clipPath: `polygon(0 0, ${sliderPosition}% 0, ${sliderPosition}% 100%, 0 100%)` }}
             >
               <img
                 src={internalPreviewUrl!}
                 alt={`Original preview of ${imageFile.file.name}`}
-                className="absolute inset-0 w-full h-full object-contain"
+                className="absolute inset-0 w-full h-full object-contain" // Ensure this is also object-contain
                 draggable="false"
               />
             </div>
             <div
-              className="absolute top-0 bottom-0 w-1.5 bg-primary/70 cursor-ew-resize group hover:bg-primary transition-colors duration-150"
+              className="absolute top-0 bottom-0 w-1 bg-primary/70 cursor-ew-resize group hover:bg-primary transition-colors duration-150 z-10"
               style={{ left: `${sliderPosition}%`, transform: 'translateX(-50%)' }}
               onMouseDown={onMouseDownSlider}
               onTouchStart={onTouchStartSlider}
             >
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-primary shadow-md flex items-center justify-center opacity-80 group-hover:opacity-100 transition-opacity">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-primary-foreground"><path d="M8 14l-4-4 4-4M16 10l4 4-4 4"/></svg>
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-primary shadow-md flex items-center justify-center opacity-80 group-hover:opacity-100 transition-opacity">
+                <ArrowRightLeft className="w-5 h-5 text-primary-foreground" />
               </div>
             </div>
-            <p className="absolute top-2 left-2 text-xs bg-black/60 text-white px-2 py-1 rounded select-none pointer-events-none z-10">Original</p>
-            <p className="absolute top-2 right-2 text-xs bg-black/60 text-white px-2 py-1 rounded select-none pointer-events-none z-10">Compressed</p>
+            <Badge variant="outline" className="absolute top-2 left-2 text-xs bg-black/60 text-white px-2 py-1 rounded select-none pointer-events-none z-20">Original</Badge>
+            <Badge variant="outline" className="absolute top-2 right-2 text-xs bg-black/60 text-white px-2 py-1 rounded select-none pointer-events-none z-20">Compressed</Badge>
           </div>
         ) : internalPreviewUrl ? (
-          <div className="w-full h-full flex items-center justify-center">
+          <div className="w-full h-full flex items-center justify-center p-2">
             <img
               src={internalPreviewUrl}
               alt={`Preview of ${imageFile.file.name}`}
-              className="max-w-full max-h-full object-contain transition-opacity duration-300"
+              className="max-w-full max-h-full object-contain transition-opacity duration-300 rounded-md"
               draggable="false"
             />
           </div>
@@ -190,66 +200,36 @@ function ImagePreviewCardComponent({ imageFile }: ImagePreviewCardProps) {
           </div>
         )}
       </CardHeader>
-      <CardContent className="p-4 flex-grow">
-        <CardTitle className="text-base font-semibold truncate mb-1" title={imageFile.file.name}>
+      <CardContent className="p-4 flex-grow space-y-2">
+        <CardTitle className="text-base font-semibold truncate mb-1 font-headline" title={imageFile.file.name}>
           {imageFile.file.name}
         </CardTitle>
-        <p className="text-xs text-muted-foreground mb-1">
-          Original: {formatBytes(imageFile.originalSize)}
-        </p>
+        <div className="text-xs text-muted-foreground font-body">
+          Original: <span className="font-medium text-card-foreground">{formatBytes(imageFile.originalSize)}</span>
+        </div>
         {imageFile.status === 'compressed' && imageFile.compressedSize !== undefined && (
-          <p className="text-xs text-green-600 font-medium mb-3">
-            Compressed: {formatBytes(imageFile.compressedSize)} ({getSavePercentage()})
-          </p>
+          <div className="text-xs font-medium text-green-600 font-body">
+            Compressed: <span className="font-semibold">{formatBytes(imageFile.compressedSize)}</span> ({getSavePercentage()})
+          </div>
         )}
 
-        {imageFile.status === 'pending' && (
-          <div className="flex items-center text-sm text-muted-foreground">
-            <Clock3 className="mr-2 h-4 w-4 text-muted-foreground/80" />
-            Awaiting Compression
-          </div>
-        )}
-        {imageFile.status === 'queued' && (
-          <div className="flex items-center text-sm text-primary/80">
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Queued for Compression...
-          </div>
-        )}
-        {imageFile.status === 'uploading' && ( // This status might not be actively used with current client-side flow
-          <div className="flex items-center text-sm text-primary">
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Preparing...
-          </div>
-        )}
-        {imageFile.status === 'compressing' && (
-          <div>
-            <div className="flex items-center text-sm text-primary mb-1">
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Compressing... {imageFile.progress}%
+        <div className="pt-1 space-y-1">
+            <div className={`flex items-center text-sm gap-2 font-medium ${currentStatus.textColor}`}>
+                {currentStatus.icon}
+                <span>{currentStatus.text}</span>
             </div>
-            <Progress value={imageFile.progress} className="w-full h-2 bg-primary/20" />
-          </div>
-        )}
-        {imageFile.status === 'compressed' && (
-          <div className="text-sm text-green-600">
-            <div className="flex items-center">
-              <CheckCircle2 className="mr-2 h-5 w-5" />
-              Compression Successful!
-            </div>
-          </div>
-        )}
-        {imageFile.status === 'error' && (
-          <div className="flex items-start text-sm text-destructive">
-            <AlertTriangle className="mr-2 h-5 w-5 flex-shrink-0" />
-            <div>
-             <span className="font-semibold">Error:</span> {imageFile.error || 'Compression failed'}
-            </div>
-          </div>
-        )}
+            {imageFile.status === 'compressing' && imageFile.progress !== undefined && imageFile.progress > 0 && (
+                 <Progress value={imageFile.progress} className="w-full h-1.5 bg-primary/20 [&>div]:bg-primary" />
+            )}
+            {imageFile.status === 'error' && imageFile.error && (
+                <p className="text-xs text-destructive mt-1 break-words">{imageFile.error}</p>
+            )}
+        </div>
+
       </CardContent>
       <CardFooter className="p-4 bg-muted/30 border-t">
         {imageFile.status === 'compressed' ? (
-          <Button onClick={handleDownload} className="w-full" variant="default">
+          <Button onClick={handleDownload} className="w-full shadow-sm hover:shadow-md transition-shadow" variant="default">
             <Download className="mr-2 h-4 w-4" />
             Download Compressed
           </Button>
@@ -265,4 +245,3 @@ function ImagePreviewCardComponent({ imageFile }: ImagePreviewCardProps) {
 }
 
 export const ImagePreviewCard = React.memo(ImagePreviewCardComponent);
-

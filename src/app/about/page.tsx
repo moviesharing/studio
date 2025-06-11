@@ -2,7 +2,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Info, Smile, Zap, ShieldCheck, UserCircle, Gift, ArrowRight } from "lucide-react";
+import { Info, Smile, Zap, ShieldCheck, UserCircle, Gift, ArrowRight, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
@@ -12,65 +12,65 @@ export const metadata: Metadata = {
 
 export default function AboutPage() {
   return (
-    <div className="container mx-auto px-4 py-12 sm:px-6 lg:px-8 max-w-3xl">
-      <header className="mb-10 text-center">
-        <Info className="mx-auto h-16 w-16 text-primary mb-4" />
-        <h1 className="text-4xl font-bold text-primary sm:text-5xl">
+    <div className="container mx-auto px-4 py-12 sm:px-6 lg:px-8 max-w-4xl">
+      <header className="mb-12 text-center">
+        <Info className="mx-auto h-16 w-16 text-primary mb-4 sm:h-20 sm:w-20" />
+        <h1 className="text-4xl font-bold font-headline text-primary sm:text-5xl md:text-6xl">
           About JPEGify
         </h1>
-        <p className="mt-3 text-lg text-muted-foreground">
-          Compress JPEGs, lightning-fast and right in your browser.
+        <p className="mt-4 text-lg text-muted-foreground sm:text-xl font-body">
+          Compress JPEGs lightning-fast, securely, and right in your browser.
         </p>
       </header>
 
-      <Card className="shadow-xl mb-8 bg-card">
-        <CardHeader>
-          <CardTitle className="text-2xl text-card-foreground">What is JPEGify?</CardTitle>
-          <CardDescription>
-            Your go-to tool for quick and secure image optimization.
+      <Card className="shadow-xl mb-10 bg-card rounded-xl">
+        <CardHeader className="border-b pb-4">
+          <CardTitle className="text-2xl sm:text-3xl font-semibold font-headline text-card-foreground">What is JPEGify?</CardTitle>
+          <CardDescription className="font-body pt-1">
+            Your go-to tool for quick, private, and effective image optimization.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6 text-card-foreground">
+        <CardContent className="space-y-6 text-card-foreground pt-6 font-body">
           <p>
-            JPEGify is a free online tool designed to help you reduce the file size of your JPEG images without compromising significantly on quality. Whether you&apos;re a web developer, blogger, photographer, or just someone looking to save storage space or speed up image sharing, JPEGify offers a simple and effective solution.
+            JPEGify is a free online tool meticulously designed to help you significantly reduce the file size of your JPEG images without a drastic compromise on quality. Whether you&apos;re a web developer aiming for faster load times, a blogger enhancing user experience, a photographer managing large portfolios, or simply someone looking to save storage space and speed up image sharing, JPEGify offers a straightforward and potent solution.
           </p>
           <p>
-            The best part? All image processing happens <strong className="font-semibold text-primary/90">directly in your web browser</strong>. Your images are never uploaded to any server, ensuring your privacy and data security remain paramount.
+            The core principle of JPEGify is privacy and efficiency: all image processing happens <strong className="font-semibold text-primary/90">directly within your web browser</strong>. Your precious images are never uploaded to any external server, ensuring your privacy and data security remain paramount throughout the process.
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-8 pt-4">
-            <div className="flex items-start space-x-3">
-              <ShieldCheck className="h-8 w-8 text-green-500 flex-shrink-0 mt-1" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-8 pt-6">
+            <div className="flex items-start space-x-4 p-4 bg-muted/30 rounded-lg">
+              <ShieldCheck className="h-10 w-10 text-green-500 flex-shrink-0 mt-1" />
               <div>
-                <h3 className="font-semibold text-lg text-card-foreground">Privacy First</h3>
+                <h3 className="font-semibold text-lg text-card-foreground">Privacy First & Secure</h3>
                 <p className="text-sm text-muted-foreground">
-                  Your images are processed locally. No uploads, no servers, full confidentiality.
+                  Your images are processed locally on your device. No uploads, no servers, complete confidentiality.
                 </p>
               </div>
             </div>
-            <div className="flex items-start space-x-3">
-              <Zap className="h-8 w-8 text-yellow-500 flex-shrink-0 mt-1" />
+            <div className="flex items-start space-x-4 p-4 bg-muted/30 rounded-lg">
+              <Zap className="h-10 w-10 text-yellow-500 flex-shrink-0 mt-1" />
               <div>
                 <h3 className="font-semibold text-lg text-card-foreground">Lightning Fast</h3>
                 <p className="text-sm text-muted-foreground">
-                  Leverage your browser&apos;s power for quick client-side compression.
+                  Leverages your browser&apos;s power for rapid client-side compression. Get results in seconds.
                 </p>
               </div>
             </div>
-            <div className="flex items-start space-x-3">
-              <Smile className="h-8 w-8 text-blue-500 flex-shrink-0 mt-1" />
+            <div className="flex items-start space-x-4 p-4 bg-muted/30 rounded-lg">
+              <Smile className="h-10 w-10 text-blue-500 flex-shrink-0 mt-1" />
               <div>
-                <h3 className="font-semibold text-lg text-card-foreground">User-Friendly</h3>
+                <h3 className="font-semibold text-lg text-card-foreground">User-Friendly Interface</h3>
                 <p className="text-sm text-muted-foreground">
-                  Simple drag &amp; drop interface. No complicated settings unless you want them.
+                  Simple drag &amp; drop functionality. Intuitive controls with advanced options available.
                 </p>
               </div>
             </div>
-            <div className="flex items-start space-x-3">
-              <Gift className="h-8 w-8 text-pink-500 flex-shrink-0 mt-1" />
+            <div className="flex items-start space-x-4 p-4 bg-muted/30 rounded-lg">
+              <Gift className="h-10 w-10 text-pink-500 flex-shrink-0 mt-1" />
               <div>
                 <h3 className="font-semibold text-lg text-card-foreground">Completely Free</h3>
                 <p className="text-sm text-muted-foreground">
-                  JPEGify is free to use, for everyone. Supported by non-intrusive ads.
+                  JPEGify is free to use for everyone, supported by non-intrusive, privacy-respecting ads.
                 </p>
               </div>
             </div>
@@ -78,28 +78,33 @@ export default function AboutPage() {
         </CardContent>
       </Card>
 
-      <Card className="shadow-xl bg-card">
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <UserCircle className="h-10 w-10 text-primary" />
-            <CardTitle className="text-2xl text-card-foreground">Meet the Developer</CardTitle>
+      <Card className="shadow-xl bg-card rounded-xl">
+        <CardHeader className="border-b pb-4">
+          <div className="flex items-center gap-4">
+            <UserCircle className="h-10 w-10 text-primary sm:h-12 sm:w-12" />
+            <CardTitle className="text-2xl sm:text-3xl font-semibold font-headline text-card-foreground">Meet the Developer</CardTitle>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4 text-card-foreground">
+        <CardContent className="space-y-4 text-card-foreground pt-6 font-body">
           <p>
-            JPEGify was created and is maintained by <strong className="font-semibold">Jphabs Khalifa</strong>.
+            JPEGify was lovingly created and is diligently maintained by <strong className="font-semibold text-primary/90">Jphabs Khalifa</strong>.
           </p>
           <p>
-            As a passionate web developer, Jphabs built JPEGify with the goal of providing a simple, private, and efficient tool for a common need. The focus is on creating useful applications that respect user privacy and offer a great experience.
+            As a passionate web developer and advocate for user-centric tools, Jphabs built JPEGify with the primary goal of providing a simple, private, and highly efficient solution for a common digital need. The focus is always on crafting useful applications that respect user privacy and offer a seamless, enjoyable experience.
           </p>
            <p>
-            Thank you for using JPEGify! We hope you find it useful. If you do, consider sharing it with others.
+            Thank you for choosing JPEGify! We genuinely hope you find it useful. If it helps you, please consider sharing it with others who might benefit.
           </p>
-          <div className="pt-2">
-            <Button asChild size="lg" className="w-full sm:w-auto">
+          <div className="pt-4 flex flex-col sm:flex-row gap-4">
+            <Button asChild size="lg" className="w-full sm:w-auto shadow-md hover:shadow-lg transition-shadow">
               <Link href="/compress">
                 Compress Your Images Now <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
+            </Button>
+             <Button asChild variant="outline" size="lg" className="w-full sm:w-auto">
+              <a href="https://github.com/jphabs/jpegify" target="_blank" rel="noopener noreferrer">
+                View on GitHub <ExternalLink className="ml-2 h-5 w-5" />
+              </a>
             </Button>
           </div>
         </CardContent>

@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { ChangeEvent, DragEvent } from "react";
@@ -7,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { UploadCloud, FileImage } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 interface ImageUploaderProps {
   onFilesAdded: (files: File[]) => void;
@@ -20,6 +22,8 @@ export function ImageUploader({ onFilesAdded }: ImageUploaderProps) {
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
       processFiles(event.target.files);
+      // Reset the input value to allow uploading the same file again
+      event.target.value = "";
     }
   };
 
@@ -51,13 +55,17 @@ export function ImageUploader({ onFilesAdded }: ImageUploaderProps) {
   const handleDragLeave = (event: DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     event.stopPropagation();
+    // Check if the leave target is outside the dropzone
+    if (event.currentTarget.contains(event.relatedTarget as Node)) {
+      return;
+    }
     setIsDragging(false);
   };
 
   const handleDragOver = (event: DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     event.stopPropagation();
-    if (!isDragging) setIsDragging(true); // Ensure dragging state is true
+    if (!isDragging) setIsDragging(true); 
   };
 
   const handleDrop = (event: DragEvent<HTMLDivElement>) => {
@@ -70,35 +78,50 @@ export function ImageUploader({ onFilesAdded }: ImageUploaderProps) {
     }
   };
   
-  const handleClick = () => {
+  const handleClickDropzone = () => {
     fileInputRef.current?.click();
   };
 
   return (
     <Card 
       className={cn(
-        "border-2 border-dashed hover:border-primary transition-colors duration-200 ease-in-out",
-        isDragging ? "border-primary bg-accent" : "border-border bg-card"
+        "border-2 border-dashed hover:border-primary/80 transition-all duration-300 ease-in-out rounded-xl group",
+        isDragging ? "border-primary bg-primary/10 scale-105 shadow-2xl" : "border-border bg-card hover:shadow-lg"
       )}
       onDragEnter={handleDragEnter}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      onClick={handleClick}
+      onClick={handleClickDropzone}
       role="button"
       tabIndex={0}
-      onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && handleClick()}
+      onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && handleClickDropzone()}
     >
-      <CardHeader className="items-center text-center">
-        <UploadCloud className={cn("h-16 w-16 mb-4", isDragging ? "text-primary" : "text-muted-foreground")} />
-        <CardTitle className="text-2xl font-semibold">
-          {isDragging ? "Drop JPEGs here" : "Drag & Drop JPEGs"}
-        </CardTitle>
-        <CardDescription>
-          or click to browse files. Max 10 files, 10MB each.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="text-center">
+      <CardContent className="flex flex-col items-center justify-center p-8 sm:p-12 space-y-6 min-h-[250px]">
+        <UploadCloud 
+            className={cn(
+                "h-16 w-16 sm:h-20 sm:w-20 transition-colors duration-300", 
+                isDragging ? "text-primary" : "text-muted-foreground group-hover:text-primary/80"
+            )} 
+        />
+        <div className="text-center">
+            <CardTitle className="text-xl sm:text-2xl font-semibold font-headline">
+            {isDragging ? "Drop JPEGs to Upload!" : "Drag & Drop Your JPEGs Here"}
+            </CardTitle>
+            <CardDescription className="mt-2 text-sm sm:text-base font-body">
+            or click to browse files from your device.
+            </CardDescription>
+        </div>
+        <Button 
+            variant="outline" 
+            size="lg"
+            className={cn(
+                "pointer-events-none transition-colors", 
+                isDragging ? "border-primary text-primary bg-primary/10" : "group-hover:border-primary/70 group-hover:text-primary/90"
+            )}
+        >
+          Select Files
+        </Button>
         <Input
           ref={fileInputRef}
           type="file"
@@ -106,9 +129,10 @@ export function ImageUploader({ onFilesAdded }: ImageUploaderProps) {
           accept="image/jpeg"
           multiple
           onChange={handleFileChange}
+          id="file-upload-input"
         />
-        <p className="text-sm text-muted-foreground flex items-center justify-center">
-          <FileImage className="h-4 w-4 mr-2" /> Supported format: JPEG
+        <p className="text-xs text-muted-foreground flex items-center justify-center pt-4 font-body">
+          <FileImage className="h-4 w-4 mr-2" /> Max 10 files, 10MB each. Only JPEG format accepted.
         </p>
       </CardContent>
     </Card>
