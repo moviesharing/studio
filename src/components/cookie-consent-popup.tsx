@@ -50,25 +50,20 @@ export function CookieConsentPopup() {
           <div className="flex items-center gap-3">
             <Cookie className="h-7 w-7 text-primary" />
             <CardTitle id="cookie-consent-title" className="text-xl font-semibold text-foreground">
-              Our Cookie Policy
+              Our Commitment to Your Privacy
             </CardTitle>
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
           <p id="cookie-consent-description" className="text-sm text-muted-foreground leading-relaxed">
-            We use cookies and similar technologies to enhance your experience,
-            analyze site traffic, and for advertising purposes (e.g., through ad networks like A-ADS).
-            By clicking "Accept All", you consent to the use of these technologies.
+            JPEGify processes images directly in your browser—your files stay private and are never uploaded.
+            To keep our service free, we show ads from A-ADS, a privacy-respecting network that doesn&apos;t use tracking cookies.
+            By clicking &quot;Accept All,&quot; you acknowledge our use of A-ADS for advertising.
             You can learn more by reading our{" "}
             <Link href="/privacy-policy" className="text-primary hover:underline">
               Privacy Policy
             </Link>
             .
-          </p>
-          <p className="text-xs text-destructive font-medium">
-            Note: This is a basic cookie consent banner. For full GDPR/CCPA compliance,
-            especially regarding third-party ad scripts, a more comprehensive Consent
-            Management Platform (CMP) and legal review are recommended.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 pt-2">
             <Button onClick={handleAccept} className="w-full sm:w-auto" size="lg">
