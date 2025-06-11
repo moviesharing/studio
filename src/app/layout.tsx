@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   title: "JPEGify - Smart Image Compression",
   description: "Compress JPEGs efficiently with JPEGify. Secure, client-side image optimization.",
   icons: {
-    icon: "/favicon.ico", // Standard path for favicon in the app directory
+    icon: "/favicon.svg", 
   },
   openGraph: {
     title: "JPEGify - Smart Image Compression",
