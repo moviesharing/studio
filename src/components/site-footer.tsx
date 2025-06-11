@@ -19,6 +19,7 @@ export function SiteFooter() {
       <div className="container mx-auto px-4 flex flex-col sm:flex-row justify-center items-center gap-x-6 gap-y-4">
         <span className="whitespace-nowrap">JPEGify {'\u00A9'} {new Date().getFullYear()}. All rights reserved.</span>
         <nav className="flex gap-x-4 gap-y-2 flex-wrap justify-center items-center">
+          <Link href="/about" className="hover:text-primary hover:underline">About</Link>
           <Link href="/privacy-policy" className="hover:text-primary hover:underline">Privacy Policy</Link>
           <Link href="/terms-conditions" className="hover:text-primary hover:underline">Terms & Conditions</Link>
           <Link href="/contact" className="hover:text-primary hover:underline">Contact</Link>
