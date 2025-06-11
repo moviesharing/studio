@@ -6,7 +6,7 @@ import type { ImageFile } from "@/types";
 import { ImageUploader } from "@/components/image-uploader";
 import { ImagePreviewCard } from "@/components/image-preview-card";
 import { Button } from "@/components/ui/button";
-import { Archive, Info, Loader2 } from "lucide-react";
+import { Archive, Info, Loader2, Play } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import imageCompression from 'browser-image-compression';
@@ -74,6 +74,7 @@ export function CompressPageContent() {
 
   const doCompressImage = useCallback(
     async (fileToProcess: ImageFile) => {
+      // Ensure status is 'compressing' when starting
       updateImageFile(fileToProcess.id, { status: "compressing", progress: 0 });
 
       try {
@@ -138,18 +139,21 @@ export function CompressPageContent() {
     [updateImageFile, toast, compressionQuality, targetResolution, removeMetadata]
   );
 
+  // Effect to process 'queued' images
   useEffect(() => {
+    const filesToProcess = imageFiles.filter(f => f.status === 'queued');
     let slotsToFill = MAX_CONCURRENT_COMPRESSIONS - activeCompressions;
-    if (slotsToFill <= 0 || imageFiles.every(f => f.status !== 'pending')) return;
 
-    const pendingFiles = imageFiles.filter(f => f.status === 'pending');
-    const filesToStartNow = pendingFiles.slice(0, slotsToFill);
+    if (slotsToFill <= 0 || filesToProcess.length === 0) return;
+
+    const filesToStartNow = filesToProcess.slice(0, slotsToFill);
 
     if (filesToStartNow.length > 0) {
       setActiveCompressions(prev => prev + filesToStartNow.length);
       filesToStartNow.forEach(file => {
-        updateImageFile(file.id, { status: 'queued' });
-        setTimeout(() => doCompressImage(file), 0);
+        // updateImageFile(file.id, { status: 'compressing', progress: 0 }); // Redundant: doCompressImage does this
+        // Call doCompressImage directly, it will set the status to 'compressing'
+        setTimeout(() => doCompressImage(file), 0); // setTimeout to allow state update batching
       });
     }
   }, [imageFiles, activeCompressions, doCompressImage, updateImageFile]);
@@ -172,7 +176,7 @@ export function CompressPageContent() {
         .map((file) => ({
           id: `${file.name}-${Date.now()}-${Math.random()}`,
           file,
-          status: "pending",
+          status: "pending", // Images start as 'pending' user action
           progress: 0,
           originalSize: file.size,
         }));
@@ -192,6 +196,28 @@ export function CompressPageContent() {
     },
     [toast, imageFiles.length]
   );
+  
+  const handleCompressAllPending = () => {
+    const filesToActuallyQueue = imageFiles.filter(f => f.status === 'pending');
+    if (filesToActuallyQueue.length === 0) {
+      toast({
+        title: "No Images to Compress",
+        description: "There are no images currently awaiting compression.",
+      });
+      return;
+    }
+
+    // Mark all 'pending' files as 'queued' so the useEffect can pick them up.
+    setImageFiles(prevFiles =>
+      prevFiles.map(file =>
+        file.status === 'pending' ? { ...file, status: 'queued' } : file
+      )
+    );
+    toast({
+        title: "Compression Queued",
+        description: `${filesToActuallyQueue.length} image(s) added to the compression queue.`,
+    });
+  };
 
   const handleBatchDownload = async () => {
     const compressedFilesToDownload = imageFiles.filter(
@@ -245,7 +271,9 @@ export function CompressPageContent() {
   };
 
   const anyCompressedSuccessfully = imageFiles.some(f => f.status === 'compressed');
-  const processingInProgress = activeCompressions > 0 || imageFiles.some(f => f.status === 'pending' || f.status === 'queued' || f.status === 'compressing');
+  const processingInProgress = activeCompressions > 0 || imageFiles.some(f => f.status === 'queued' || f.status === 'compressing');
+  const hasPendingFiles = imageFiles.some(f => f.status === 'pending');
+  const pendingFileCount = imageFiles.filter(f => f.status === 'pending').length;
 
 
   return (
@@ -255,7 +283,7 @@ export function CompressPageContent() {
           <header className="text-center space-y-2">
             <h1 className="text-5xl font-bold font-headline text-primary sm:text-6xl">Compress JPEGs</h1>
             <p className="text-lg text-muted-foreground sm:text-xl">
-              Drag &amp; drop your JPEGs to compress them instantly in your browser with fine-tuned settings.
+              Drag &amp; drop your JPEGs, adjust settings, and compress them instantly in your browser.
             </p>
           </header>
 
@@ -271,7 +299,7 @@ export function CompressPageContent() {
             <CardHeader>
               <CardTitle className="text-2xl font-semibold">Compression Settings</CardTitle>
               <CardDescription>
-                Adjust the desired quality, resolution, and other options for image compression. Settings apply to newly uploaded images.
+                Adjust the desired quality, resolution, and other options. Settings apply when you start compression.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-8">
@@ -367,18 +395,31 @@ export function CompressPageContent() {
             <section className="space-y-6">
               <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
                 <h2 className="text-3xl font-semibold font-headline">Your Images</h2>
-                <Button
-                  onClick={handleBatchDownload}
-                  disabled={!anyCompressedSuccessfully || processingInProgress}
-                  size="lg"
-                >
-                  {processingInProgress ? (
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  ) : (
-                    <Archive className="mr-2 h-5 w-5" />
-                  )}
-                  {processingInProgress ? 'Processing...' : (anyCompressedSuccessfully ? 'Download All Compressed' : 'No Images Compressed')}
-                </Button>
+                <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                  <Button
+                    onClick={handleCompressAllPending}
+                    disabled={!hasPendingFiles || processingInProgress}
+                    size="lg"
+                    className="w-full sm:w-auto"
+                  >
+                    <Play className="mr-2 h-5 w-5" />
+                    Compress Pending ({pendingFileCount})
+                  </Button>
+                  <Button
+                    onClick={handleBatchDownload}
+                    disabled={!anyCompressedSuccessfully || processingInProgress}
+                    size="lg"
+                    variant="outline"
+                    className="w-full sm:w-auto"
+                  >
+                    {processingInProgress ? (
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    ) : (
+                      <Archive className="mr-2 h-5 w-5" />
+                    )}
+                    {processingInProgress ? 'Processing...' : (anyCompressedSuccessfully ? 'Download All Compressed' : 'No Images Compressed')}
+                  </Button>
+                </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {imageFiles.map((file) => (
@@ -392,3 +433,4 @@ export function CompressPageContent() {
     </div>
   );
 }
+

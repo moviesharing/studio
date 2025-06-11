@@ -6,7 +6,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Download, Loader2, CheckCircle2, AlertTriangle, FileImage } from "lucide-react";
+import { Download, Loader2, CheckCircle2, AlertTriangle, FileImage, Clock3 } from "lucide-react";
 
 interface ImagePreviewCardProps {
   imageFile: ImageFile;
@@ -63,7 +63,6 @@ function ImagePreviewCardComponent({ imageFile }: ImagePreviewCardProps) {
 
   const handleTouchMove = useCallback((event: TouchEvent) => {
     if (event.touches.length === 1) {
-      // Prevent page scroll while dragging slider
       event.preventDefault();
       handleDragMove(event.touches[0].clientX);
     }
@@ -82,7 +81,6 @@ function ImagePreviewCardComponent({ imageFile }: ImagePreviewCardProps) {
   const handleDragStart = useCallback(() => {
     if (!imageContainerRef.current) return;
     isDraggingRef.current = true;
-    // Add global listeners
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mouseup', handleDragEnd);
     window.addEventListener('touchmove', handleTouchMove, { passive: false });
@@ -97,13 +95,11 @@ function ImagePreviewCardComponent({ imageFile }: ImagePreviewCardProps) {
 
   const onTouchStartSlider = (event: React.TouchEvent<HTMLDivElement>) => {
      if (event.touches.length === 1) {
-      // event.preventDefault(); // Already handled in handleTouchMove's options and logic
       handleDragStart();
     }
   };
 
   useEffect(() => {
-    // Cleanup global event listeners if the component unmounts while dragging
     return () => {
       if (isDraggingRef.current) {
         handleDragEnd();
@@ -146,17 +142,15 @@ function ImagePreviewCardComponent({ imageFile }: ImagePreviewCardProps) {
 
   return (
     <Card className="overflow-hidden shadow-lg flex flex-col bg-card">
-      <CardHeader className="p-0 relative aspect-video"> {/* Removed flex flex-row for interactive slider */}
+      <CardHeader className="p-0 relative aspect-video">
         {showInteractiveSideBySide ? (
           <div ref={imageContainerRef} className="relative w-full h-full select-none overflow-hidden">
-            {/* Compressed image (bottom layer) */}
             <img
               src={compressedPreviewUrl!}
               alt={`Compressed preview of ${imageFile.file.name}`}
               className="absolute inset-0 w-full h-full object-contain"
               draggable="false"
             />
-            {/* Original image (top layer, clipped) */}
             <div
               className="absolute inset-0 w-full h-full"
               style={{ clipPath: `polygon(0 0, ${sliderPosition}% 0, ${sliderPosition}% 100%, 0 100%)` }}
@@ -168,8 +162,6 @@ function ImagePreviewCardComponent({ imageFile }: ImagePreviewCardProps) {
                 draggable="false"
               />
             </div>
-
-            {/* Draggable Slider Line/Handle */}
             <div
               className="absolute top-0 bottom-0 w-1.5 bg-primary/70 cursor-ew-resize group hover:bg-primary transition-colors duration-150"
               style={{ left: `${sliderPosition}%`, transform: 'translateX(-50%)' }}
@@ -180,7 +172,6 @@ function ImagePreviewCardComponent({ imageFile }: ImagePreviewCardProps) {
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-primary-foreground"><path d="M8 14l-4-4 4-4M16 10l4 4-4 4"/></svg>
               </div>
             </div>
-             {/* Labels */}
             <p className="absolute top-2 left-2 text-xs bg-black/60 text-white px-2 py-1 rounded select-none pointer-events-none z-10">Original</p>
             <p className="absolute top-2 right-2 text-xs bg-black/60 text-white px-2 py-1 rounded select-none pointer-events-none z-10">Compressed</p>
           </div>
@@ -214,17 +205,17 @@ function ImagePreviewCardComponent({ imageFile }: ImagePreviewCardProps) {
 
         {imageFile.status === 'pending' && (
           <div className="flex items-center text-sm text-muted-foreground">
-            <Loader2 className="mr-2 h-4 w-4 animate-spin text-primary/70" />
-            Pending...
+            <Clock3 className="mr-2 h-4 w-4 text-muted-foreground/80" />
+            Awaiting Compression
           </div>
         )}
         {imageFile.status === 'queued' && (
-          <div className="flex items-center text-sm text-muted-foreground">
-            <Loader2 className="mr-2 h-4 w-4 animate-spin text-primary/80" />
-            Queued...
+          <div className="flex items-center text-sm text-primary/80">
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Queued for Compression...
           </div>
         )}
-        {imageFile.status === 'uploading' && (
+        {imageFile.status === 'uploading' && ( // This status might not be actively used with current client-side flow
           <div className="flex items-center text-sm text-primary">
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             Preparing...
@@ -274,3 +265,4 @@ function ImagePreviewCardComponent({ imageFile }: ImagePreviewCardProps) {
 }
 
 export const ImagePreviewCard = React.memo(ImagePreviewCardComponent);
+
