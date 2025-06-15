@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 };
 
 export default function ContactPage() {
-  const formSubmitUrl = "https://formsubmit.co/jphabswebsites+jpegify@gmail.com";
+  const formSubmitUrl = "https://formsubmit.co/3f585bfa17357bcb102a30fe555909a3";
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://jpegify.pages.dev';
   const redirectUrl = `${siteUrl}/contact`; // Or `${siteUrl}/contact?submitted=true` if you want to show a message
 
