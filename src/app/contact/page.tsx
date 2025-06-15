@@ -3,6 +3,9 @@ import type { Metadata } from "next";
 import { Mail, MessageSquare, Send } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 
 export const metadata: Metadata = {
   title: "Contact Us - JPEGify",
@@ -10,6 +13,10 @@ export const metadata: Metadata = {
 };
 
 export default function ContactPage() {
+  const formSubmitUrl = "https://formsubmit.co/jphabswebsites+jpegify@gmail.com";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://jpegify.pages.dev';
+  const redirectUrl = `${siteUrl}/contact`; // Or `${siteUrl}/contact?submitted=true` if you want to show a message
+
   return (
     <div className="container mx-auto px-4 py-12 sm:px-6 lg:px-8 max-w-3xl">
       <header className="mb-12 text-center">
@@ -29,38 +36,52 @@ export default function ContactPage() {
             <CardTitle className="text-2xl sm:text-3xl font-semibold font-headline text-card-foreground">Get in Touch</CardTitle>
           </div>
           <CardDescription className="font-body pt-1">
-            If you have any questions, feedback, feature requests, or bug reports, please don&apos;t hesitate to reach out.
+            Please use the form below to send us a message. We&apos;ll get back to you as soon as possible.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-8 pt-6">
-          <div className="flex items-start space-x-4 p-4 bg-muted/30 rounded-lg">
-            <Mail className="h-8 w-8 text-primary flex-shrink-0 mt-1" />
-            <div>
-              <h3 className="font-semibold text-lg text-card-foreground font-headline">Email Us Directly</h3>
-              <p className="text-muted-foreground font-body">
-                For general inquiries, support, or feedback, the best way to reach us is by email:
-              </p>
-              <a
-                href="mailto:jphabswebsites@gmail.com"
-                className="text-primary hover:underline font-medium text-lg break-all"
-              >
-                jphabswebsites@gmail.com
-              </a>
+        <CardContent className="pt-6">
+          <form action={formSubmitUrl} method="POST" className="space-y-6">
+            {/* FormSubmit Hidden Inputs */}
+            <input type="hidden" name="_captcha" value="false" />
+            <input type="hidden" name="_next" value={redirectUrl} />
+            <input type="hidden" name="_template" value="table" />
+            <input type="hidden" name="_autoresponse" value="Thank you for contacting JPEGify! We've received your message and will get back to you soon." />
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="name" className="font-medium text-foreground/90">Your Name</Label>
+                <Input type="text" name="name" id="name" placeholder="John Doe" required className="text-base py-3" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email" className="font-medium text-foreground/90">Your Email</Label>
+                <Input type="email" name="email" id="email" placeholder="you@example.com" required className="text-base py-3" />
+              </div>
             </div>
-          </div>
-          
-          <div className="text-center font-body">
-            <p className="text-muted-foreground">
-              We typically respond within 1-2 business days. We appreciate your patience and look forward to hearing from you!
-            </p>
-          </div>
 
-          <div className="pt-2 text-center">
-            <Button size="lg" asChild className="shadow-md hover:shadow-lg transition-shadow">
-                <a href="mailto:jphabswebsites@gmail.com">
-                    Send an Email <Mail className="ml-2 h-5 w-5" />
-                </a>
-            </Button>
+            <div className="space-y-2">
+              <Label htmlFor="subject" className="font-medium text-foreground/90">Subject (Optional)</Label>
+              <Input type="text" name="subject" id="subject" placeholder="Feedback about JPEGify" className="text-base py-3" />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="message" className="font-medium text-foreground/90">Your Message</Label>
+              <Textarea name="message" id="message" rows={6} placeholder="Tell us what's on your mind..." required className="text-base py-3" />
+            </div>
+
+            <div>
+              <Button type="submit" size="lg" className="w-full sm:w-auto shadow-md hover:shadow-lg transition-shadow">
+                Send Message <Send className="ml-2 h-5 w-5" />
+              </Button>
+            </div>
+          </form>
+          
+          <div className="mt-10 text-center font-body">
+            <p className="text-muted-foreground">
+              We typically respond within 1-2 business days. We appreciate your patience!
+            </p>
+            <p className="text-sm text-muted-foreground mt-2">
+              If you prefer, you can also email us directly at: <a href="mailto:jphabswebsites@gmail.com" className="text-primary hover:underline">jphabswebsites@gmail.com</a>
+            </p>
           </div>
         </CardContent>
       </Card>
